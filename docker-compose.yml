@@ -51,6 +51,20 @@ services:
     entrypoint: /amore_setup.sh amoreAgent -a MCHQAShifter -s /amoreSite/sorted.254646.raw -r
     cpu_shares: 256 
 
+  amore-web:
+    image: aphecetche/alice-amore
+    volumes:
+      - vc_amore_site:/amoreSite
+      - vc_date_site:/dateSite
+    links:
+      - dim
+      - datedb
+      - infologger
+    ports:
+      - 8100:80
+    entrypoint: /amore_setup.sh httpd -DFOREGROUND 
+    cpu_shares: 256 
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     links:

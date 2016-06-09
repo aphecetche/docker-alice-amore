@@ -13,7 +13,7 @@ amore() {
         --link ${project}_infologger_1 \
         --net ${project}_default \
         -e DATE_SITE=/dateSite \
-        amore-devel \
+        aphecetche/alice-amore \
         /bin/bash
 }
 

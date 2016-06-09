@@ -4,10 +4,9 @@ RUN rpmdb --rebuilddb && \
     yum clean all && \
     yum update -y yum && \
     yum update -y && \
-    yum install -y libXpm libGLU amore amore-web dqmv 
+    yum install -y libXpm libGLU amore amore-web dqmv aliroot 
 
-COPY ./amore_setup.sh /
-ADD ./amore_start_agent.sh /
+ADD ./amore_setup.sh /
 
 ENTRYPOINT ["/amore_setup.sh"]
 

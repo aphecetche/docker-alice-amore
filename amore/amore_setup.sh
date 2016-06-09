@@ -23,4 +23,9 @@ export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
 
 . amoreSetup $AMORE_SITE/AMORE.params
 
+if test -d /opt/aliroot; then
+    export ALICE_ROOT=/opt/aliroot
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ALICE_ROOT/lib
+fi
+
 exec "$@"
