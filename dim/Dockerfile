@@ -1,8 +1,6 @@
-FROM aphecetche/alice-date:7.100
+FROM aphecetche/alice-date
 
 COPY ./dim_setup.sh /
-
-#EXPOSE 2505
 
 ENTRYPOINT ["/dim_setup.sh"]
 

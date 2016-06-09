@@ -1,9 +1,6 @@
-FROM aphecetche/alice-date:7.100
+FROM aphecetche/alice-date
 
 COPY ./infologger_setup.sh /
-
-EXPOSE 6001
-EXPOSE 6002
 
 ENTRYPOINT ["/infologger_setup.sh"]
 

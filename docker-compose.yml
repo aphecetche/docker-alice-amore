@@ -10,7 +10,7 @@ services:
 
   dim:
     build: dim
-    image: aphecetche/alice-dim
+    #image: alice-dim
     volumes:
       - vc_date_site:/dateSite
     hostname:
@@ -20,7 +20,7 @@ services:
 
   infologger:
     build: infologger
-    image: aphecetche/alice-infologger
+    #image: alice-infologger
     volumes:
       - vc_date_site:/dateSite
     links:
@@ -39,7 +39,19 @@ services:
     entrypoint: /amore_setup.sh amoreAgent -a TST01 -s /amoreSite/sorted.254646.raw -r
     cpu_shares: 256 
 
-  phpmyadmin-datedb:
+  agentMCH:
+    image: aphecetche/alice-amore
+    volumes:
+      - vc_amore_site:/amoreSite
+      - vc_date_site:/dateSite
+    links:
+      - dim
+      - datedb
+      - infologger
+    entrypoint: /amore_setup.sh amoreAgent -a MCHQAShifter -s /amoreSite/sorted.254646.raw -r
+    cpu_shares: 256 
+
+  phpmyadmin:
     image: phpmyadmin/phpmyadmin
     links:
       - datedb 
