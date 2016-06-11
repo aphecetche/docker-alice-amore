@@ -27,28 +27,49 @@ services:
       - datedb
       - dim
 
+  das:
+    build: da
+    image: aphecetche/alice-muon-das
+
   agentTST:
     image: aphecetche/alice-amore
     volumes:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
+      - vc_amore_cdb:/local/cdb
     links:
       - dim
       - datedb
       - infologger
+    hostname: agentTST
     entrypoint: /amore_setup.sh amoreAgent -a TST01 -s /amoreSite/sorted.254646.raw -r
     cpu_shares: 256 
 
-  agentMCH:
+  daqfxs:
     image: aphecetche/alice-amore
     volumes:
-      - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
     links:
       - dim
       - datedb
       - infologger
-    entrypoint: /amore_setup.sh amoreAgent -a MCHQAShifter -s /amoreSite/sorted.254646.raw -r
+    hostname: daqfxs
+    entrypoint: /ssh_setup.sh
+    volumes:
+      - vc_daq_fxs:/daqfxs
+    
+  agentMCHQAShifter:
+    image: aphecetche/alice-amore
+    volumes:
+      - vc_amore_site:/amoreSite
+      - vc_date_site:/dateSite
+      - vc_amore_cdb:/local/cdb
+    links:
+      - dim
+      - datedb
+      - infologger
+    hostname: agentMCHQAShifter
+    entrypoint: /amore_setup.sh amoreAgent -a MCHQAShifter -s /amoreSite/15000237401023.509.FILTER_RAWMUON_WITH_ALIPHYSICS_v5-06-04-01.raw -r
     cpu_shares: 256 
 
   amore-web:
@@ -56,12 +77,15 @@ services:
     volumes:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
+      - ~/alicesw/run2/amore-web:/opt/amore/web
     links:
       - dim
       - datedb
       - infologger
     ports:
       - 8100:80
+    environment:
+      DIM_DNS_NODE: "dim"
     entrypoint: /amore_setup.sh httpd -DFOREGROUND 
     cpu_shares: 256 
 
@@ -80,4 +104,8 @@ volumes:
   vc_date_site:
     external: true
   vc_date_db:
+    external: true
+  vc_amore_cdb:
+    external: true
+  vc_daq_fxs:
     external: true
