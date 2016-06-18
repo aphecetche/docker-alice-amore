@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# amore setup within a container
 
 export DATE_SITE=/dateSite
 . /date/setup.sh
@@ -26,4 +25,5 @@ if test -d /opt/aliroot; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ALICE_ROOT/lib
 fi
 
-exec "$@"
+amore -d EVE -m GenericGui
+

@@ -8,7 +8,7 @@ RUN rpmdb --rebuilddb && \
     openssh-server openssh-clients
 
 ADD ./amore_setup.sh /
-ADD ./ssh_setup.sh /
+ADD ./launch_amoreGui.sh /
 
 RUN useradd daq -pvmG5WTRjaU3HU
 
