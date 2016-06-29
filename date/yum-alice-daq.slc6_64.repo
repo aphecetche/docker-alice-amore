@@ -1,0 +1,7 @@
+[main]
+[alice-daq]
+name=ALICE DAQ software and dependencies - SLC6/64
+baseurl=https://yum:daqsoftrpm@alice-daq-yum.web.cern.ch/alice-daq-yum/slc6_64/
+enabled=1
+protect=1
+gpgcheck=0

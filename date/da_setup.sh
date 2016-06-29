@@ -1,0 +1,3 @@
+mkdir /daoutput
+cd /daoutput
+
