@@ -1,0 +1,7 @@
+
+# DATE database configuration
+DATE_DB_MYSQL_USER   daq
+DATE_DB_MYSQL_PWD    daq
+DATE_DB_MYSQL_HOST   datedb
+DATE_DB_MYSQL_DB     DATE_CONFIG
+

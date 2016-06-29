@@ -9,29 +9,34 @@ services:
       MYSQL_ROOT_PASSWORD: date 
 
   dim:
-    build: dim
+    build: date
+    image: alice-date 
     volumes:
       - vc_date_site:/dateSite
     hostname:
       dim
     links:
       - datedb
+    entrypoint: /dim_setup.sh
 
   infologger:
-    build: infologger
+    build: date
+    image: alice-date
     volumes:
       - vc_date_site:/dateSite
     links:
       - datedb
       - dim
+    entrypoint: /infologger_setup.sh
 
   daqfxs:
-    image: aphecetche/alice-amore
+    build: date 
+    image: alice-date
     volumes:
       - vc_date_site:/dateSite
       - vc_daq_fxs:/daqfxs
-      - $PWD/ssh-server.daqfxs/:/etc/ssh:ro
-      - $PWD/ssh-user.daq/:/home/daq/.ssh
+      - vc_ssh_daqfxs:/etc/ssh:ro
+      - vc_home_daq:/home/daq
     links:
       - dim
       - datedb
@@ -40,13 +45,15 @@ services:
     entrypoint: /usr/sbin/sshd -D
     
   agentrunner:
-    image: aphecetche/alice-amore
+    build: amore
+    image: alice-amore 
     volumes:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
       - vc_amore_cdb:/local/cdb
-      - $PWD/ssh-server.daqfxs/:/etc/ssh:ro
-      - $PWD/ssh-user.daq/:/home/daq/.ssh
+      - vc_ssh_agentrunner:/etc/ssh:ro
+      - vc_home_dqm:/home/dqm
+      - vc_home_daq:/home/daq
     links:
       - dim
       - datedb
@@ -54,8 +61,25 @@ services:
     hostname: agentrunner
     entrypoint: /amore_setup.sh /usr/sbin/sshd -D 
 
+  dadev:
+    build: online-devel
+    image: alice-online-devel
+    volumes:
+      - vc_amore_site:/amoreSite
+      - vc_date_site:/dateSite
+      - vc_amore_cdb:/local/cdb
+      - vc_home_dqm:/home/dqm
+      - vc_home_daq:/home/daq
+    links:
+      - dim
+      - datedb
+      - infologger
+    hostname: dadev 
+    entrypoint: /amore_setup.sh /usr/sbin/sshd -D 
+
   archiver:
-    image: aphecetche/alice-amore
+    build: amore
+    image: alice-amore
     volumes:
       - vc_date_site:/dateSite
       - vc_amore_site:/amoreSite
@@ -67,11 +91,13 @@ services:
     entrypoint: /amore_setup.sh amoreArchiver -g db:amoreArchiverConfig.txt
 
   agentMCHQAshifter:
-    image: aphecetche/alice-amore
+    build: amore
+    image: alice-amore
     volumes:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
       - vc_amore_cdb:/local/cdb
+      - /etc/localtime:/etc/localtime
     links:
       - dim
       - datedb
@@ -80,36 +106,60 @@ services:
 #    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/15000237401023.509.FILTER_RAWMUON_WITH_ALIPHYSICS_v5-06-04-01.raw -r
     environment: 
       DATE_RUN_NUMBER: 256289
-    # entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r -e 1000 -c 1
-    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r
+      TZ: "Europe/Paris"
+    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r -e 470 -c 1
+    #entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r
     cpu_shares: 256 
 
-  agentMCHQC:
-    image: aphecetche/alice-amore
-    volumes:
-      - vc_amore_site:/amoreSite
-      - vc_date_site:/dateSite
-      - vc_amore_cdb:/local/cdb
-    links:
-      - dim
-      - datedb
-      - infologger
-    hostname: agentMCHQC
-#    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/15000237401023.509.FILTER_RAWMUON_WITH_ALIPHYSICS_v5-06-04-01.raw -r
-    environment: 
-      DATE_RUN_NUMBER: 256289
-    #entrypoint: /amore_setup.sh amoreAgent -a MCHQC -s /amoreSite/16000256289037.8802.raw -r -e 1000 -c 1
-    entrypoint: /amore_setup.sh amoreAgent -a MCHQC -s /amoreSite/16000256289037.8802.raw -r
-    cpu_shares: 256 
-
+#   agentMCHDA:
+#     build: amore
+#     image: alice-amore
+#     volumes:
+#       - vc_amore_site:/amoreSite
+#       - vc_date_site:/dateSite
+#       - vc_amore_cdb:/local/cdb
+#       - /etc/localtime:/etc/localtime 
+#     links:
+#       - dim
+#       - datedb
+#       - infologger
+#     hostname: agentMCHDA
+#     environment: 
+#       DATE_RUN_NUMBER: 256289
+#       TZ: "Europe/Paris"
+#     entrypoint: /amore_setup.sh amoreAgent -a MCHDA -s /data_for_db_agents.raw -r -t 45 
+#     cpu_shares: 256 
+# #
+#   agentMCHQC:
+#     build: amore
+#     image: alice-amore
+#     volumes:
+#       - vc_amore_site:/amoreSite
+#       - vc_date_site:/dateSite
+#       - vc_amore_cdb:/local/cdb
+#       - /etc/localtime:/etc/localtime 
+#     links:
+#       - dim
+#       - datedb
+#       - infologger
+#     hostname: agentMCHQC
+# #    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/15000237401023.509.FILTER_RAWMUON_WITH_ALIPHYSICS_v5-06-04-01.raw -r
+#     environment: 
+#       DATE_RUN_NUMBER: 256289
+#       TZ: "Europe/Paris"
+#     entrypoint: /amore_setup.sh amoreAgent -a MCHQC -s /amoreSite/16000256289037.8802.raw -r -e 470 -c 1
+#     #entrypoint: /amore_setup.sh amoreAgent -a MCHQC -s /amoreSite/16000256289037.8802.raw -r
+#     cpu_shares: 256 
+#
   amore-web:
-    image: aphecetche/alice-amore
+    build: amore
+    image: alice-amore 
     volumes:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
-      - ~/alicesw/run2/amore-web:/opt/amore/web
-      - $PWD/ssh-user.daq/:/home/daq/.ssh
-      - $PWD/ssh-user.daq/:/root/.ssh
+        #- ~/alicesw/run2/amore-web:/opt/amore/web
+      - vc_home_daq:/home/daq
+      - vc_home_dqm:/home/dqm
     links:
       - dim
       - datedb
@@ -140,4 +190,12 @@ volumes:
   vc_amore_cdb:
     external: true
   vc_daq_fxs:
+    external: true
+  vc_home_daq:
+    external: true
+  vc_home_dqm:
+    external: true
+  vc_ssh_daqfxs:
+    external: true
+  vc_ssh_agentrunner:
     external: true
