@@ -11,7 +11,7 @@
 
 ali_date() {
     local host_name=$1
-    local command=${2:=/bin/bash}
+    local command=${2:-/bin/bash}
     drunx11 -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
@@ -100,9 +100,9 @@ ali_amore_modules_dev() {
 }
 
 ali_da_dev() {
-    local hostname=${1:="dadev"}
-    local detectorcode=${2:="MCH"}
-    local runnumber=${3:=123}
+    local hostname=${1:-"dadev"}
+    local detectorcode=${2:-"MCH"}
+    local runnumber=${3:-123}
     drunx11 -it --rm \
         -v $(pwd):/daoutput \
         -v vc_date_site:/dateSite \
@@ -244,7 +244,7 @@ ali_amoreGui() {
     # with the proper links etc...
     # to run amoreGui
 
-    local index=${1:=""}
+    local index=${1:-""}
 
     drunx11 --rm \
         -v vc_date_site:/dateSite \
@@ -313,11 +313,11 @@ ali_generate_ssh_configs() {
 
     ali_make_volume_for_datesite() {
     
-        local volume_name=${1:=vc_date_site}
+        local volume_name=${1:-vc_date_site}
         local container_name=tmp-generate-$volume_name
 
         docker volume create --name $volume_name
-        docker run --name ${container_name} -v ${volume_name}:/dateSite alice-date /bin/true
+        docker run --name ${container_name} -v ${volume_name}:/dateSite hepsw/slc-base /bin/true
         docker cp $(pwd)/bootstrap/. ${container_name}:/dateSite 
         docker rm -f ${container_name}
     }
