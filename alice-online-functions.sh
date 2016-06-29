@@ -1,4 +1,4 @@
-#/bin/sh
+#! /bin/sh
 # 
 # A bunch of methods to ease the work with docker containers
 # for amore
@@ -8,8 +8,6 @@
 # required containers are running.
 #
 #
-local project=dockeraliceonline
-local compose_network=${project}_default
 
 ali_date() {
     local host_name=$1
@@ -20,7 +18,7 @@ ali_date() {
         -v vc_daq_fxs:/daqfxs \
         -v vc_home_daq:/home/daq \
         -v vc_home_dqm:/home/dqm \
-        --net ${compose_network} \
+        --net dockeraliceonline_default \
         --name=$host_name \
         --hostname=$host_name \
         alice-date \
@@ -43,7 +41,7 @@ ali_amore() {
         -v vc_daq_fxs:/daqfxs \
         -v vc_home_daq:/home/daq \
         -v vc_amore_cdb:/local/cdb \
-        --net ${project}_default \
+        --net dockeraliceonline_default \
         --name=$host_name \
         --hostname=$host_name \
         alice-amore \
@@ -66,10 +64,10 @@ ali_amore_dev() {
         -v ${HOME}/alicesw/run2/amore_modules/:/amore_modules \
         -v ${HOME}/alicesw/run2/amore/:/amore \
         -v ${HOME}/.globus:/root/.globus \
-        --link ${project}_datedb_1 \
-        --link ${project}_dim_1 \
-        --link ${project}_infologger_1 \
-        --net ${project}_default \
+        --link dockeraliceonline_datedb_1 \
+        --link dockeraliceonline_dim_1 \
+        --link dockeraliceonline_infologger_1 \
+        --net dockeraliceonline_default \
         --hostname=$host_name \
         --cap-add sys_ptrace \
         --name=$host_name \
@@ -89,10 +87,10 @@ ali_amore_modules_dev() {
         -v vc_amore_cdb:/local/cdb \
         -v ${HOME}/alicesw/run2/amore_modules/:/amore_modules \
         -v ${HOME}/.globus:/root/.globus \
-        --link ${project}_datedb_1 \
-        --link ${project}_dim_1 \
-        --link ${project}_infologger_1 \
-        --net ${project}_default \
+        --link dockeraliceonline_datedb_1 \
+        --link dockeraliceonline_dim_1 \
+        --link dockeraliceonline_infologger_1 \
+        --net dockeraliceonline_default \
         -e DATE_SITE=/dateSite \
         --name=$host_name \
         --hostname=$host_name \
@@ -117,10 +115,10 @@ ali_da_dev() {
         -v ${HOME}/alicesw/run2/aliroot-date/AliRoot:/alicesw/AliRoot:ro \
         -v ${HOME}/alicesw/run2/aliroot-date/alidist:/alicesw/alidist:ro \
         -v ${HOME}/alicesw/repos/AliRoot:$HOME/alicesw/repos/AliRoot:ro \
-        --link ${project}_datedb_1 \
-        --link ${project}_dim_1 \
-        --link ${project}_infologger_1 \
-        --net ${project}_default \
+        --link dockeraliceonline_datedb_1 \
+        --link dockeraliceonline_dim_1 \
+        --link dockeraliceonline_infologger_1 \
+        --net dockeraliceonline_default \
         --hostname ${hostname} \
         --name ${hostname} \
         -e DATE_DETECTOR_CODE="$detectorcode" \
@@ -167,10 +165,10 @@ ali_callda() {
         -v vc_daqDA-$daname:/opt/daqDA-$daname \
         -v /etc/localtime:/etc/localtime \
         -e TZ="Europe/Paris" \
-        --link ${project}_datedb_1 \
-        --link ${project}_dim_1 \
-        --link ${project}_infologger_1 \
-        --net ${project}_default \
+        --link dockeraliceonline_datedb_1 \
+        --link dockeraliceonline_dim_1 \
+        --link dockeraliceonline_infologger_1 \
+        --net dockeraliceonline_default \
         -e DATE_DETECTOR_CODE="$detectorcode" \
         -e DATE_SITE=/dateSite \
         -e DATE_RUN_NUMBER=$(ali_getrunnumber $rawfile) \
@@ -196,10 +194,10 @@ ali_callda_dev() {
         -v vc_amore_cdb:/local/cdb \
         -v vc_da_sw:/alicesw/sw \
         -v vc_daq_fxs:/daqfxs \
-        --link ${project}_datedb_1 \
-        --link ${project}_dim_1 \
-        --link ${project}_infologger_1 \
-        --net ${project}_default \
+        --link dockeraliceonline_datedb_1 \
+        --link dockeraliceonline_dim_1 \
+        --link dockeraliceonline_infologger_1 \
+        --net dockeraliceonline_default \
         -e DATE_DETECTOR_CODE="$detectorcode" \
         -e DATE_SITE=/dateSite \
         -e DATE_RUN_NUMBER=$runnumber \
@@ -234,7 +232,7 @@ ali_infoBrowser() {
     drunx11 -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
-        --net ${project}_default \
+        --net dockeraliceonline_default \
         -e DATE_SITE=/dateSite \
         --name infoBrowser \
         alice-date \
@@ -254,8 +252,8 @@ ali_amoreGui() {
         -v vc_amore_site:/amoreSite \
         -v $PWD/ssh-user.daq:/home/daq/.ssh \
         -v vc_amore_cdb:/local/cdb \
-        --link ${project}_dim_1 \
-        --net ${project}_default \
+        --link dockeraliceonline_dim_1 \
+        --net dockeraliceonline_default \
         -e DATE_SITE=/dateSite \
         --name amoreGui$index \
         alice-amore \
@@ -264,11 +262,12 @@ ali_amoreGui() {
 
 ali_generate_ssh_configs() {
 
-    serverlist=( daqfxs agentrunner )
-    userlist=( daq dqm )
+    serverlist="daqfxs agentrunner"
+    userlist="daq dqm"
 
-    for server in $serverlist
+    for server in $(echo $serverlist | tr " " "\n")
     do
+        echo $server
         rm -rf ssh-server.$server
         mkdir ssh-server.$server
         cd ssh-server.$server
@@ -277,14 +276,14 @@ ali_generate_ssh_configs() {
         cp sshd_config ssh-server.$server
     done
 
-    for user in $userlist
+    for user in $(echo $userlist | tr " " "\n")
     do
         rm -rf ssh-user
         mkdir ssh-user
         cd ssh-user
         ssh-keygen -t rsa -f id_rsa -N '' -C '' -q
         touch authorized_keys known_hosts
-        for server in $serverlist
+        for server in $(echo $serverlist | tr " " "\n")
         do
             echo $(cat id_rsa.pub) $user@$server >> authorized_keys
             echo $server $(cat ../ssh-server.$server/ssh_host_rsa_key.pub) >> known_hosts
@@ -302,7 +301,7 @@ ali_generate_ssh_configs() {
         rm -rf ssh-user
     done
 
-    for server in $serverlist
+    for server in $(echo $serverlist | tr " " "\n")
     do
         docker volume create --name vc_ssh_$server
         docker run --name tmp$server -v vc_ssh_$server:/etc/ssh hepsw/slc-base /bin/true 
@@ -335,7 +334,7 @@ ali_generate_ssh_configs() {
 
       docker run --rm -v vc_date_db:/var/lib/mysql \
           -v vc_date_site:/dateSite \
-          --net ${compose_network} \
+          --net dockeraliceonline_default \
           alice-date \
           /date/db/daqDetDB_ls
     }
@@ -351,7 +350,7 @@ ali_generate_ssh_configs() {
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v ${volume_name}:/opt/daqDA-${daname} \
-        --net ${compose_network} \
+        --net dockeraliceonline_default \
         --name tmp$daname \
         alice-date \
         yum install -y daqDA-$daname 
@@ -366,8 +365,8 @@ ali_generate_ssh_configs() {
         for module in $@
         do
             docker run --rm -v vc_amore_site:/amoreSite \
-                --net ${compose_network} \
-                --link ${project}_datedb_1 \
+                --net dockeraliceonline_default \
+                --link dockeraliceonline_datedb_1 \
                 alice-amore \
                 yum install -y amore${module}
         done
@@ -381,7 +380,7 @@ docker run -it --rm \
         -v vc_daq_fxs:/daqfxs \
         -v vc_home_daq:/home/daq \
         -v vc_home_dqm:/home/dqm \
-        --net ${compose_network} \
+        --net dockeraliceonline_default \
         alice-date \
         /date/infoLogger/daqFES_ls
 }
@@ -396,7 +395,7 @@ docker run -it --rm \
         -v vc_home_daq:/home/daq \
         -v vc_home_dqm:/home/dqm \
         -v $(pwd):/tmp \
-        --net ${compose_network} \
+        --net dockeraliceonline_default \
         -w /tmp \
         alice-date \
         /date/infoLogger/daqFES_get $1
