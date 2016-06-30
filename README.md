@@ -15,11 +15,13 @@ the runtime environment of the piece of code that are developped (either AMORE a
 Also, the documentation below assumes you know what AMORE is, what a DA is, and
  how to develop both on a "regular" SLC6 machine.
 
-# Installation 
+# Requirements
 
-> Note that so far this has only been tested on a Mac, using [Docker for Mac
-beta](https://download.docker.com/mac/beta/Docker.dmg)
-> (version 1.12.0-rc2-beta16 at the time of this writing).
+You must have [docker](http://www.docker.com/products/docker) and [docker-compose](https://github.com/docker/compose/releases)
+installed on your machine (if you are on a Mac, [Docker for Mac beta](https://download.docker.com/mac/beta/Docker.dmg)
+brings you both.
+
+# Installation 
 
 After having installed Docker on your machine, you should then `git clone` this
  project on your machine.
@@ -30,7 +32,7 @@ After having installed Docker on your machine, you should then `git clone` this
 ```
 
 Of particular interest in the `docker-alice-online` directory are the `docker-compose.yml`
- which is the main file to steer the containers and `alice-online-functions.zsh` which 
+ which is the main file to steer the containers and `alice-online-functions.sh` which 
  defines a bunch of convenience functions to work with the created containers.
 
 Before you can use the thing, you have to :
@@ -38,7 +40,30 @@ Before you can use the thing, you have to :
 - build the images upon which the containers are created
 - populate the data volumes used by the containers
 
-Let's start with the central source of information : the database !
+Let's start with the central source of information : the database ! Let's first
+ source the `alice-online-functions.sh` script to get some helper functions defined.
+
+```bash
+. ./alice-online-functions.sh
+```
+
+Then create a basic DATE database : 
+
+```bash
+ali_make_volume_for_db
+```
+
+To check the creating was successfull, just use `docker-compose` to launch the
+ DB service, and also the `phpMyAdmin` service to get a peek into the created 
+ databases.
+
+```
+docker-compose up -d datedb phpmyadmi
+```
+
+And point your browser to [localhost:1337](localhost:1337), using (root,date) as 
+ credentials to enter phpMyAdmin. You should be able to see the created databases : 
+ DATE_CONFIG, DATE_LOG, ECS_CONFIG and LOGBOOK.
 
 # Usage 
 

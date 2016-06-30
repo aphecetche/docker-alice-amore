@@ -1,10 +1,10 @@
 #! /bin/sh
-# 
+#
 # A bunch of methods to ease the work with docker containers
 # for amore
 #
 # Most of the functions here (except the one starting with ali_make_volume_)
-# assume that the docker-compose up -d command has been executed so the 
+# assume that the docker-compose up -d command has been executed so the
 # required containers are running.
 #
 #
@@ -30,7 +30,7 @@ ali_did() {
 }
 
 ali_amore() {
-    # create an amore container 
+    # create an amore container
     # with the proper links etc...
     # that can be used for the amore (modules) binaries
     local host_name=$1
@@ -49,7 +49,7 @@ ali_amore() {
 }
 
 ali_amore_dev() {
-    # create an amore container 
+    # create an amore container
     # with the proper links etc...
     # than can be used to compile amore core libraries and debug them
     # note the vc_amore_site_dev (_dev) volume, vs vc_amore_site (no _dev)
@@ -76,7 +76,7 @@ ali_amore_dev() {
 }
 
 ali_amore_modules_dev() {
-    # create an amore container 
+    # create an amore container
     # with the proper links etc...
     # than can be used to compile amore modules
     local host_name=$1
@@ -137,14 +137,14 @@ ali_getrunnumber() {
     # can not be any else than a pristine raw data chunk name
     # in the form YY000123456ZZZ.chunknumber.raw
     local file=$(basename $1)
-    echo ${file:5:6} 
+    echo ${file:5:6}
 }
 
 ali_callda() {
     local daname=$1
     local detectorcode=$2
     local amore_da_name=$3
-    # insure rawfile is an absolute path 
+    # insure rawfile is an absolute path
     pushd
     local rawfile=$(cd "$(dirname "$4")"; pwd)/$(basename "$4")
     popd
@@ -175,7 +175,7 @@ ali_callda() {
         -e DATE_ROLE_NAME=${amore_da_name} \
         -w /daoutput \
         alice-amore \
-        /opt/daqDA-$daname/$daexe /file.raw 
+        /opt/daqDA-$daname/$daexe /file.raw
 }
 
 ali_callda_dev() {
@@ -203,7 +203,7 @@ ali_callda_dev() {
         -e DATE_RUN_NUMBER=$runnumber \
         -e DATE_ROLE_NAME=${amore_da_name} \
         alice-online-devel \
-        $dapath /file.raw 
+        $dapath /file.raw
 }
 
 ali_da_mchbpevo() {
@@ -226,9 +226,9 @@ ali_da_dev_mchbpevo() {
 
 ali_infoBrowser() {
 
-    # create an amore container 
+    # create an amore container
     # with the proper links etc...
-    # to run the infobrowser 
+    # to run the infobrowser
     drunx11 -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
@@ -236,11 +236,11 @@ ali_infoBrowser() {
         -e DATE_SITE=/dateSite \
         --name infoBrowser \
         alice-date \
-       /launch_infoBrowser.sh 
+       /launch_infoBrowser.sh
 }
 
 ali_amoreGui() {
-    # create an amore container 
+    # create an amore container
     # with the proper links etc...
     # to run amoreGui
 
@@ -257,7 +257,7 @@ ali_amoreGui() {
         -e DATE_SITE=/dateSite \
         --name amoreGui$index \
         alice-amore \
-       /launch_amoreGui.sh 
+       /launch_amoreGui.sh
 }
 
 ali_generate_ssh_configs() {
@@ -304,7 +304,7 @@ ali_generate_ssh_configs() {
     for server in $(echo $serverlist | tr " " "\n")
     do
         docker volume create --name vc_ssh_$server
-        docker run --name tmp$server -v vc_ssh_$server:/etc/ssh hepsw/slc-base /bin/true 
+        docker run --name tmp$server -v vc_ssh_$server:/etc/ssh hepsw/slc-base /bin/true
         docker cp ssh-server.$server/. tmp$server:/etc/ssh
         docker rm tmp$server
         rm -rf ssh-server.$server
@@ -312,53 +312,54 @@ ali_generate_ssh_configs() {
     }
 
     ali_make_volumes() {
-	local volumes="vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
-	for vol in $(echo $volumes | tr " " "\n")
-	do
-	  docker volume create --name $vol
-	done
+        local volumes="vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
+
+        for vol in $(echo $volumes | tr " " "\n")
+        do
+            docker volume create --name $vol 2&>1 /dev/null
+        done
     }
 
     ali_make_volume_for_datesite() {
-    
         local volume_name=${1:-vc_date_site}
         local container_name=tmp-generate-$volume_name
 
-        docker volume create --name $volume_name
+        ali_make_volumes
+
+        docker volume create --name $volume_name 2&>1 /dev/null
         docker run --name ${container_name} -v ${volume_name}:/dateSite hepsw/slc-base /bin/true
-        docker cp $(pwd)/bootstrap/. ${container_name}:/dateSite 
+        docker cp $(pwd)/bootstrap/. ${container_name}:/dateSite
         docker rm -f ${container_name}
     }
-    
+
     ali_make_volume_for_db() {
         # create a volume to hold the mysql DATE database(s)
 
-      ali_make_volume_for_datesite vc_date_site_bis
+      ali_make_volume_for_datesite 
 
-      docker volume create --name vc_date_db
-
-      docker-compose build dim # to be sure we get the alice-date image
-      docker-compose up -d datedb
+      # to be sure we get the alice-date image
+      docker-compose build dim 2&>1 /dev/null 
+      docker-compose up -d datedb 2&>1 /dev/null
 
       docker run -i --rm -v vc_date_site:/dateSite -v vc_date_db:/var/lib/mysql --net \
          dockeraliceonline_default alice-date /date/.commonScripts/newMysql.sh 2&>1 /dev/null <<EOF
 	datedb
 	date
 	DATE_CONFIG
-	DATE_LOG2
-	ECS_CONFIG3
-	LOGBOOK4
+	DATE_LOG
+	ECS_CONFIG
+	LOGBOOK
 	daq daq
 EOF
 
+        docker-compose  down
     }
-    
+
     ali_make_volume_for_da() {
-    
         local daname=$1 # DA name, without the daqDA- prefix, e.g. MCH-BPEVO or MCH-PED
         local volume_name=vc_daqDA-${daname}
 
-        docker volume create --name ${volume_name} 
+        docker volume create --name ${volume_name}
 
         docker run --rm \
         -v vc_date_site:/dateSite \
@@ -367,9 +368,9 @@ EOF
         --net dockeraliceonline_default \
         --name tmp$daname \
         alice-date \
-        yum install -y daqDA-$daname 
+        yum install -y daqDA-$daname
     }
-   
+
     ali_install_amore_modules() {
 
         # install a bunch of modules (without the amore prefix, e.g. MCH, DB, TRI,
