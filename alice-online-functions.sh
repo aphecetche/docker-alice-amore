@@ -327,9 +327,9 @@ ali_generate_ssh_configs() {
         ali_make_volumes
 
         docker volume create --name $volume_name 2&>1 /dev/null
-        docker run --name ${container_name} -v ${volume_name}:/dateSite hepsw/slc-base /bin/true
+        docker run --name ${container_name} -v ${volume_name}:/dateSite hepsw/slc-base /bin/true 2&>1 /dev/null
         docker cp $(pwd)/bootstrap/. ${container_name}:/dateSite
-        docker rm -f ${container_name}
+        docker rm -f ${container_name} 2&>1 /dev/null
     }
 
     ali_make_volume_for_db() {
@@ -352,7 +352,7 @@ ali_generate_ssh_configs() {
 	daq daq
 EOF
 
-        docker-compose  down
+        docker-compose down 2&>1 /dev/null
     }
 
     ali_make_volume_for_da() {
