@@ -311,6 +311,14 @@ ali_generate_ssh_configs() {
     done
     }
 
+    ali_make_volumes() {
+	local volumes="vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
+	for vol in $(echo $volumes | tr " " "\n")
+	do
+	  docker volume create --name $vol
+	done
+    }
+
     ali_make_volume_for_datesite() {
     
         local volume_name=${1:-vc_date_site}
@@ -332,11 +340,17 @@ ali_generate_ssh_configs() {
       docker-compose build dim # to be sure we get the alice-date image
       docker-compose up -d datedb
 
-      docker run --rm -v vc_date_db:/var/lib/mysql \
-          -v vc_date_site:/dateSite \
-          --net dockeraliceonline_default \
-          alice-date \
-          /date/db/daqDetDB_ls
+      docker run -i --rm -v vc_date_site:/dateSite -v vc_date_db:/var/lib/mysql --net \
+         dockeraliceonline_default alice-date /date/.commonScripts/newMysql.sh 2&>1 /dev/null <<EOF
+	datedb
+	date
+	DATE_CONFIG
+	DATE_LOG2
+	ECS_CONFIG3
+	LOGBOOK4
+	daq daq
+EOF
+
     }
     
     ali_make_volume_for_da() {
