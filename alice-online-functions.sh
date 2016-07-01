@@ -9,6 +9,11 @@
 #
 #
 
+ali_volumes()
+{
+    echo "vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
+}
+
 ali_date() {
     local host_name=$1
     local command=${2:-/bin/bash}
@@ -312,47 +317,85 @@ ali_generate_ssh_configs() {
     }
 
     ali_make_volumes() {
-        local volumes="vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
 
-        for vol in $(echo $volumes | tr " " "\n")
+        for vol in $(echo $(ali_volumes) | tr " " "\n")
         do
-            docker volume create --name $vol 
+            docker volume create --name $vol
         done
     }
 
-    ali_make_volume_for_datesite() {
-        local volume_name=${1:-vc_date_site}
-        local container_name=tmp-generate-$volume_name
+    ali_remove_volumes() {
 
-        ali_make_volumes
+    echo "WARNING : you are about to remove the following volumes"
+    echo $(ali_volumes)
+    read -p "Are you sure you want to do that (yes/no) ? " YESNO
 
-        docker volume create --name $volume_name
-        docker run --name ${container_name} -v ${volume_name}:/dateSite hepsw/slc-base /bin/true
-        docker cp $(pwd)/bootstrap/. ${container_name}:/dateSite
-        docker rm -f ${container_name} 2&>1 /dev/null
+    if [ "$YESNO" == "yes" ]; then
+
+            for vol in $(echo $(ali_volumes) | tr " " "\n")
+            do
+                    docker volume rm $vol
+            done
+    fi
     }
 
-    ali_make_volume_for_db() {
-        # create a volume to hold the mysql DATE database(s)
+    ali_bootstrap() {
 
-      ali_make_volume_for_datesite 
+      # - create a default mysql DATE database
+      # - build/download all the required images
+      # - create all data volumes
 
-      # to be sure we get the alice-date image
+      # to be able to use any of the docker-compose commands
+      # we must first get all the data volumes declared in
+      # the docker-compose.yml file created
+
+      ali_make_volumes
+
+      # download our base images
+      docker-compose pull datedb
+      docker-compose pull phpmyadmin
+
+      # build the alice-date image
       docker-compose build dim
+
+      # get the mysql server up
       docker-compose up -d datedb
 
-      docker run -i --rm -v vc_date_site:/dateSite -v vc_date_db:/var/lib/mysql --net \
+      # wait for mysql to come up
+      sleep 10
+
+      # create the databases
+      docker run -i --rm -v vc_date_db:/var/lib/mysql --net \
          dockeraliceonline_default alice-date /date/.commonScripts/newMysql.sh <<EOF
-	datedb
-	date
-	DATE_CONFIG
-	DATE_LOG
-	ECS_CONFIG
-	LOGBOOK
-	daq daq
+      datedb
+      date
+      DATE_CONFIG
+      DATE_LOG
+      ECS_CONFIG
+      LOGBOOK
+      daq daq
 EOF
 
-        docker-compose down 2&>1 /dev/null
+      # populate the databases
+      docker run -i --rm \
+          -v vc_date_site:/dateSite \
+          -v vc_date_db:/var/lib/mysql \
+          --net dockeraliceonline_default alice-date \
+          /date/.commonScripts/newDateSite.sh <<EOF
+      /dateSite
+      DATE_CONFIG daq daq datedb
+      root
+      dim
+      DATE
+      DATE_LOG daq daq datedb
+      LOGBOOK daq daq datedb
+      y
+      DAQ_TEST
+      y
+      y
+EOF
+
+    docker-compose down
     }
 
     ali_make_volume_for_da() {

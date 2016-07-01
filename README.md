@@ -40,22 +40,23 @@ Before you can use the thing, you have to :
 - build the images upon which the containers are created
 - populate the data volumes used by the containers
 
-Let's start with the central source of information : the database ! Let's first
+Let's first
  source the `alice-online-functions.sh` script to get some helper functions defined.
 
 ```bash
 . ./alice-online-functions.sh
 ```
 
-Then create a basic DATE database : 
+Then use the `bootstrap` function to perform the necessary (one-time only) 
+ operations
 
 ```bash
-ali_make_volume_for_db
+ali_bootstrap
 ```
 
-This can take a moment or two (as some image is being downloaded and another is being built).
+This can take a moment or two (as some images are being downloaded and another is being built).
 
-To check the creating was successfull, just use `docker-compose` to launch the
+To check the bootstraping was successfull, just use `docker-compose` to launch the
  DB service, and also the `phpMyAdmin` service to get a peek into the created 
  databases.
 
@@ -65,7 +66,8 @@ docker-compose up -d datedb phpmyadmin
 
 And point your browser to [localhost:8080](localhost:8080), using (root,date) as 
  credentials to enter phpMyAdmin. You should be able to see the created databases : 
- DATE_CONFIG, DATE_LOG, ECS_CONFIG and LOGBOOK.
+ DATE_CONFIG, DATE_LOG, ECS_CONFIG and LOGBOOK, as well as their respective tables
+ (use phpmyadmin to navigate in those tables).
 
 # Usage 
 
