@@ -316,7 +316,7 @@ ali_generate_ssh_configs() {
 
         for vol in $(echo $volumes | tr " " "\n")
         do
-            docker volume create --name $vol 2&>1 /dev/null
+            docker volume create --name $vol 
         done
     }
 
@@ -326,8 +326,8 @@ ali_generate_ssh_configs() {
 
         ali_make_volumes
 
-        docker volume create --name $volume_name 2&>1 /dev/null
-        docker run --name ${container_name} -v ${volume_name}:/dateSite hepsw/slc-base /bin/true 2&>1 /dev/null
+        docker volume create --name $volume_name
+        docker run --name ${container_name} -v ${volume_name}:/dateSite hepsw/slc-base /bin/true
         docker cp $(pwd)/bootstrap/. ${container_name}:/dateSite
         docker rm -f ${container_name} 2&>1 /dev/null
     }
@@ -338,11 +338,11 @@ ali_generate_ssh_configs() {
       ali_make_volume_for_datesite 
 
       # to be sure we get the alice-date image
-      docker-compose build dim 2&>1 /dev/null 
-      docker-compose up -d datedb 2&>1 /dev/null
+      docker-compose build dim
+      docker-compose up -d datedb
 
       docker run -i --rm -v vc_date_site:/dateSite -v vc_date_db:/var/lib/mysql --net \
-         dockeraliceonline_default alice-date /date/.commonScripts/newMysql.sh 2&>1 /dev/null <<EOF
+         dockeraliceonline_default alice-date /date/.commonScripts/newMysql.sh <<EOF
 	datedb
 	date
 	DATE_CONFIG

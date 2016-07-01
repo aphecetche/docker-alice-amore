@@ -53,15 +53,17 @@ Then create a basic DATE database :
 ali_make_volume_for_db
 ```
 
+This can take a moment or two (as some image is being downloaded and another is being built).
+
 To check the creating was successfull, just use `docker-compose` to launch the
  DB service, and also the `phpMyAdmin` service to get a peek into the created 
  databases.
 
 ```
-docker-compose up -d datedb phpmyadmi
+docker-compose up -d datedb phpmyadmin
 ```
 
-And point your browser to [localhost:1337](localhost:1337), using (root,date) as 
+And point your browser to [localhost:8080](localhost:8080), using (root,date) as 
  credentials to enter phpMyAdmin. You should be able to see the created databases : 
  DATE_CONFIG, DATE_LOG, ECS_CONFIG and LOGBOOK.
 
