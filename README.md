@@ -54,7 +54,21 @@ Then use the `bootstrap` function to perform the necessary (one-time only)
 ali_bootstrap
 ```
 
-This can take a moment or two (as some images are being downloaded and another is being built).
+Depending on your network bandwith (and/or your machine CPUs) this can take a while, 
+ as some images are being downloaded and other ones are being built.
+
+You can see which images have been built/downloaded :
+
+```
+laurent@linux-mint ~/docker-alice-online $ docker images
+REPOSITORY              TAG                 IMAGE ID            CREATED              SIZE
+alice-online-devel      latest              5ec7c4c714b6        About a minute ago   6.083 GB
+alice-amore             latest              47ffb83c6269        9 minutes ago        5.569 GB
+alice-date              latest              96f4611463e7        About an hour ago    1.882 GB
+phpmyadmin/phpmyadmin   latest              8d7d99c9cd5a        7 days ago           57.02 MB
+mysql                   5.6                 01bbb21c400c        3 weeks ago          330 MB
+hepsw/slc-base          latest              7db783379fc3        20 months ago        135.6 MB
+```
 
 To check the bootstraping was successfull, just use `docker-compose` to launch the
  DB service, and also the `phpMyAdmin` service to get a peek into the created 
@@ -71,7 +85,7 @@ And point your browser to [localhost:8080](localhost:8080), using (root,date) as
 
 # Usage 
 
-The normal usage (once everything is setup) is to launch the set of containers 
+The normal usage (once everything has been bootstrapped correctly) is to launch the set of containers 
 using the `docker-compose up` command (the -d flag, as in `daemon` is 
 used to launch containers in detached mode).
  
@@ -108,9 +122,9 @@ develop a DA
 - daqfxs : a simple machine to act as the DAQ File eXchange Server (use for the
 output the DAs)
 - datedb : a MySQL server with DATE, AMORE and LOGBOOK databases 
--
+
 
 Note that the 3 main online databases are handled by the same "machine" (datedb),
 for the sake of simplicity of this dev. setup. Nothing prevents to change that
  to a more realistic scenario with one server for each database, if need be 
- (just changed the relevant docker-compose.yml)
+ (just change the relevant docker-compose.yml)

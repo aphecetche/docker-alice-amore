@@ -9,6 +9,14 @@
 #
 #
 
+ali_docker_run() {
+    #ali_xquartz_if_not_running
+    #docker run -e DISPLAY=$(ali_getmyip):0 -v /tmp/.X11-unix:/tmp/.X11-unix \
+        # -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+
+    docker run -e DISPLAY=:0 -v /tmp/.X11-unix:/tmp/.X11-unix -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+}
+
 ali_volumes()
 {
     echo "vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
@@ -17,7 +25,7 @@ ali_volumes()
 ali_date() {
     local host_name=$1
     local command=${2:-/bin/bash}
-    drunx11 -it --rm \
+    ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_daq_fxs:/daqfxs \
@@ -39,7 +47,7 @@ ali_amore() {
     # with the proper links etc...
     # that can be used for the amore (modules) binaries
     local host_name=$1
-    drunx11 -it --rm \
+    ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_amore_site:/amoreSite \
@@ -60,7 +68,7 @@ ali_amore_dev() {
     # note the vc_amore_site_dev (_dev) volume, vs vc_amore_site (no _dev)
     # for the other functions above
     local host_name=$1
-    drunx11 -it --rm \
+    ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_amore_site_dev:/amoreSite \
@@ -85,7 +93,7 @@ ali_amore_modules_dev() {
     # with the proper links etc...
     # than can be used to compile amore modules
     local host_name=$1
-    drunx11 -it --rm \
+    ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_amore_site:/amoreSite \
@@ -108,7 +116,7 @@ ali_da_dev() {
     local hostname=${1:-"dadev"}
     local detectorcode=${2:-"MCH"}
     local runnumber=${3:-123}
-    drunx11 -it --rm \
+    ali_docker_run -it --rm \
         -v $(pwd):/daoutput \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
@@ -234,7 +242,7 @@ ali_infoBrowser() {
     # create an amore container
     # with the proper links etc...
     # to run the infobrowser
-    drunx11 -it --rm \
+    ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         --net dockeraliceonline_default \
@@ -251,7 +259,7 @@ ali_amoreGui() {
 
     local index=${1:-""}
 
-    drunx11 --rm \
+    ali_docker_run --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_amore_site:/amoreSite \
@@ -357,7 +365,15 @@ ali_generate_ssh_configs() {
 
       # build the alice-date image
       docker-compose build dim
-
+      # build the alice-amore image
+      docker-compose build agentrunner
+      # build the alice-online-devel image
+      docker-compose build dadev
+      # build the alice-more image
+      docker-compose build archiver
+      # build the alice-online-devel
+      docker-compose build dadev
+      
       # get the mysql server up
       docker-compose up -d datedb
 
