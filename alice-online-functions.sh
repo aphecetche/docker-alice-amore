@@ -48,7 +48,9 @@ ali_amore() {
     # with the proper links etc...
     # that can be used for the amore (modules) binaries
     local host_name=$1
-    ali_docker_run -it --rm \
+    local cmd=${2:-/bin/bash}
+    local tty=${3:-t}
+    ali_docker_run -i$tty --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_amore_site:/amoreSite \
@@ -59,7 +61,7 @@ ali_amore() {
         --name=$host_name \
         --hostname=$host_name \
         alice-amore \
-        /bin/bash
+        $cmd
 }
 
 ali_amore_dev() {
@@ -456,6 +458,40 @@ EOF
     }
     
 
+    ali_make_agents() {
+
+        # create a few default agents
+        # feel free to add yours here
+
+      ali_amore tmpMCHQAshifter /opt/amore/bin/newAmoreAgent ' ' <<EOF
+      MCHQAshifter
+      runner-mchqashifter
+      agentMCHQAshifter
+      QA
+      QA
+      :
+      PublisherQA
+EOF
+      ali_amore tmpMCHQC /opt/amore/bin/newAmoreAgent ' ' <<EOF
+      MCHQC
+      runner-mchqc
+      agentMCHQC
+      MCH
+      MCH
+      :
+      QualityControl
+EOF
+      ali_amore tmpMCHDA /opt/amore/bin/newAmoreAgent ' ' <<EOF
+      MCHDA
+      runner-mchda
+      agentMCHDA
+      DB
+      MCH
+      /data_for_db_agents.raw    
+      DBPublisher
+EOF
+    }
+
     ali_bootstrap() {
 
       # - create a default mysql DATE database
@@ -473,6 +509,8 @@ EOF
       ali_make_datedb
 
       ali_make_amoredb
+
+      ali_make_agents
 
       docker-compose down
     }

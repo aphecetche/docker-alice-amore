@@ -80,7 +80,7 @@ docker-compose up -d datedb phpmyadmin
 
 And point your browser to [localhost:8080](localhost:8080), using (root,date) as 
  credentials to enter phpMyAdmin. You should be able to see the created databases : 
- DATE_CONFIG, DATE_LOG, ECS_CONFIG and LOGBOOK, as well as their respective tables
+ DATE_CONFIG, DATE_LOG, ECS_CONFIG, LOGBOOK, and AMORE, as well as their respective tables
  (use phpmyadmin to navigate in those tables).
 
 # Usage 
