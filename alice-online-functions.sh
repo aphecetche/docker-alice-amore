@@ -3,9 +3,10 @@
 # A bunch of methods to ease the work with docker containers
 # for amore
 #
-# Most of the functions here (except the one starting with ali_make_volume_)
-# assume that the docker-compose up -d command has been executed so the
-# required containers are running.
+# Most of the functions here (except the one starting with ali_make_ which
+# are used only once by the ali_bootstrap command) assume that the 
+# docker-compose up -d command has been executed so the required 
+# containers are running.
 #
 #
 
@@ -347,17 +348,7 @@ ali_generate_ssh_configs() {
     fi
     }
 
-    ali_bootstrap() {
-
-      # - create a default mysql DATE database
-      # - build/download all the required images
-      # - create all data volumes
-
-      # to be able to use any of the docker-compose commands
-      # we must first get all the data volumes declared in
-      # the docker-compose.yml file created
-
-      ali_make_volumes
+    ali_make_images() {
 
       # download our base images
       docker-compose pull datedb
@@ -373,7 +364,12 @@ ali_generate_ssh_configs() {
       docker-compose build archiver
       # build the alice-online-devel
       docker-compose build dadev
-      
+    }
+
+    ali_make_datedb() {
+
+      ali_make_volumes
+
       # get the mysql server up
       docker-compose up -d datedb
 
@@ -411,7 +407,74 @@ EOF
       y
 EOF
 
-    docker-compose down
+
+    # tweak the DATE_INFOLOGGER_LOGHOST which is not correctly set by the
+    # newDataSite.sh script
+
+      docker run -i --rm \
+          -v vc_date_site:/dateSite \
+          -v vc_date_db:/var/lib/mysql \
+          --net dockeraliceonline_default alice-date \
+        /date/db/Linux/daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
+
+    }
+
+    ali_make_amoredb() {
+    
+        ali_make_volumes
+
+        # get the mysql server up
+        docker-compose up -d datedb
+    
+        # wait a bit for it to come up
+        sleep 10
+
+        # create the amore database
+        
+        docker run -i --rm -v vc_date_db:/var/lib/mysql \
+            --net dockeraliceonline_default \
+            --entrypoint /bin/bash \
+            -e AMORE=/opt/amore \
+            -e PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/amore/bin \
+            alice-amore \
+            /opt/amore/bin/amoreMysqlSetup <<EOF
+        datedb
+        date
+        AMORE
+        daq daq
+EOF
+
+        # mount once the vc_amore_site volume so it is
+        # populated with the initial image content
+        docker run --rm -v vc_amore_site:/amoreSite \
+            -v vc_date_db:/var/lib/mysql \
+            --net dockeraliceonline_default \
+            alice-amore \
+            /bin/true
+
+        docker-compose down
+    }
+    
+
+    ali_bootstrap() {
+
+      # - create a default mysql DATE database
+      # - build/download all the required images
+      # - create all data volumes
+
+      # to be able to use any of the docker-compose commands
+      # we must first get all the data volumes declared in
+      # the docker-compose.yml file created
+
+      ali_make_volumes
+
+      ali_make_images
+
+      ali_make_datedb
+
+      ali_make_amoredb
+
+      docker-compose down
     }
 
     ali_make_volume_for_da() {

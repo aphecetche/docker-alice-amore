@@ -9,6 +9,7 @@ RUN rpmdb --rebuilddb && \
 
 COPY *.sh /
 COPY data_for_db_agents.raw /
+COPY AMORE.params /amoreSite/
 
 ENTRYPOINT ["/amore_setup.sh"]
 
