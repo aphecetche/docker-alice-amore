@@ -18,8 +18,7 @@ ali_docker_run() {
     docker run -e DISPLAY=:0 -v /tmp/.X11-unix:/tmp/.X11-unix -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
 }
 
-ali_volumes()
-{
+ali_volumes() {
     echo "vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
 }
 
@@ -350,6 +349,14 @@ ali_generate_ssh_configs() {
     fi
     }
 
+    ali_daqDB_query() {
+      docker run -i --rm \
+          -v vc_date_site:/dateSite \
+          -v vc_date_db:/var/lib/mysql \
+          --net dockeraliceonline_default alice-date \
+          /date/db/Linux/daqDB_query "$1"
+    }
+
     ali_make_images() {
 
       # download our base images
@@ -368,19 +375,27 @@ ali_generate_ssh_configs() {
       docker-compose build dadev
     }
 
-    ali_make_datedb() {
-
-      ali_make_volumes
-
-      # get the mysql server up
+    ali_up_datedb() {
+    
+      # get the mysql server up 
       docker-compose up -d datedb
 
       # wait for mysql to come up
       sleep 10
+    }
+
+    ali_make_datedb() {
+
+      ali_make_volumes
+
+      ali_up_datedb
 
       # create the databases
-      docker run -i --rm -v vc_date_db:/var/lib/mysql --net \
-         dockeraliceonline_default alice-date /date/.commonScripts/newMysql.sh <<EOF
+      docker run -i --rm \
+          -v vc_date_db:/var/lib/mysql \
+          --net dockeraliceonline_default \
+          alice-date \
+          /date/.commonScripts/newMysql.sh <<EOF
       datedb
       date
       DATE_CONFIG
@@ -394,7 +409,8 @@ EOF
       docker run -i --rm \
           -v vc_date_site:/dateSite \
           -v vc_date_db:/var/lib/mysql \
-          --net dockeraliceonline_default alice-date \
+          --net dockeraliceonline_default \
+          alice-date \
           /date/.commonScripts/newDateSite.sh <<EOF
       /dateSite
       DATE_CONFIG daq daq datedb
@@ -413,23 +429,22 @@ EOF
     # tweak the DATE_INFOLOGGER_LOGHOST which is not correctly set by the
     # newDataSite.sh script
 
-      docker run -i --rm \
-          -v vc_date_site:/dateSite \
-          -v vc_date_db:/var/lib/mysql \
-          --net dockeraliceonline_default alice-date \
-        /date/db/Linux/daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
+    ali_daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
 
-    }
+    # set the FES access information
+    ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_DB','daq:daq@datedb/DATE_LOG','Database','',1);"
+
+    ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_PATH','/daqfxs','Database','',1);"
+    
+    docker-compose down
+
+}
 
     ali_make_amoredb() {
     
         ali_make_volumes
 
-        # get the mysql server up
-        docker-compose up -d datedb
-    
-        # wait a bit for it to come up
-        sleep 10
+        ali_up_datedb
 
         # create the amore database
         
@@ -457,11 +472,12 @@ EOF
         docker-compose down
     }
     
-
     ali_make_agents() {
 
         # create a few default agents
         # feel free to add yours here
+
+      ali_up_datedb
 
       ali_amore tmpMCHQAshifter /opt/amore/bin/newAmoreAgent ' ' <<EOF
       MCHQAshifter
@@ -490,8 +506,19 @@ EOF
       /data_for_db_agents.raw    
       DBPublisher
 EOF
+      docker-compose down
     }
 
+    ali_echo() {
+    
+      RED='\033[0;31m'
+      NC='\033[0m' 
+
+      echo -e "${RED}==================== $1${NC}"
+      shift
+      $@
+    }
+    
     ali_bootstrap() {
 
       # - create a default mysql DATE database
@@ -502,17 +529,15 @@ EOF
       # we must first get all the data volumes declared in
       # the docker-compose.yml file created
 
-      ali_make_volumes
+      ali_echo "Make Volumes" ali_make_volumes
 
-      ali_make_images
+      ali_echo "Make Images" ali_make_images
 
-      ali_make_datedb
+      ali_echo "Make and populate DATE DB" ali_make_datedb
 
-      ali_make_amoredb
+      ali_echo "Make and populate AMORE DB" ali_make_amoredb
 
-      ali_make_agents
-
-      docker-compose down
+      ali_echo "Make some agents" ali_make_agents
     }
 
     ali_make_volume_for_da() {
