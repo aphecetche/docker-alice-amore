@@ -10,12 +10,64 @@
 #
 #
 
-ali_docker_run() {
-    #ali_xquartz_if_not_running
-    #docker run -e DISPLAY=$(ali_getmyip):0 -v /tmp/.X11-unix:/tmp/.X11-unix \
-        # -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+ali_getmyip() {
 
+    case "$OSTYPE" in
+        linux*)
+            ip route get 8.8.8.8 | head -1 | cut -d' ' -f8
+            ;;
+        darwin*)
+            0.0.0.0
+            ;;
+    esac
+}
+
+ali_xquartz_if_not_running() {
+    #
+    # check (and start if not running) that xquartz is
+    # running (MAC OSX ONLY)
+    #
+    v_nolisten_tcp=$(defaults read org.macosforge.xquartz.X11 nolisten_tcp)
+    v_xquartz_app=$(defaults read org.macosforge.xquartz.X11 app_to_run)
+
+    if (( $v_nolisten_tcp == 1 )); then
+        defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
+    fi
+
+    if [ $v_xquartz_app != "/usr/bin/true" ]; then
+        defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
+    fi
+
+    # test if XQuartz has to be launched
+    #
+    if [[ "$(launchctl list | grep startx | cut -c 1)" == "-" ]]; then
+        open -a XQuartz
+        sleep 2
+        xhost + $(getmyip)
+    fi
+}
+
+ali_docker_run() {
+
+    # a wrapper to "docker run" to get X11 display working
+    # correctly
+
+    case "$OSTYPE" in
+        darwin*)
+            ali_xquartz_if_not_running
+            ;;
+    esac
+
+    xhost +$(ali_getmyip)
+
+    case "$OSTYPE" in
+        darwin*)
+            docker run -e DISPLAY=$(ali_getmyip):0 -v /tmp/.X11-unix:/tmp/.X11-unix -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+            ;;
+        *)
     docker run -e DISPLAY=:0 -v /tmp/.X11-unix:/tmp/.X11-unix -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+        ;;
+    esac
 }
 
 ali_volumes() {
@@ -40,6 +92,20 @@ ali_date() {
 
 ali_did() {
     ali_date did /opt/dim/linux/did
+}
+
+ali_pt2_root() {
+    ali_docker_run -it --rm \
+        -v vc_date_site:/dateSite \
+        -v vc_date_db:/var/lib/mysql \
+        -v vc_amore_site:/amoreSite \
+        -v vc_daq_fxs:/daqfxs \
+        -v vc_home_daq:/home/daq \
+        -v vc_amore_cdb:/local/cdb \
+        -v $(pwd):/localdrive \
+        --net dockeraliceonline_default \
+        alice-amore \
+        /opt/root/bin/root.exe
 }
 
 ali_amore() {
@@ -538,9 +604,19 @@ EOF
       ali_echo "Make and populate AMORE DB" ali_make_amoredb
 
       ali_echo "Make some agents" ali_make_agents
+
+      ali_echo "Install some MCH DAs" /bin/true
+
+      ali_up_datedb
+
+      ali_install_da MCH-BPEVO
+      ali_install_da MCH-OCC
+      ali_install_da MCH-PED
+
+      docker-compose down
     }
 
-    ali_make_volume_for_da() {
+    ali_install_da() {
         local daname=$1 # DA name, without the daqDA- prefix, e.g. MCH-BPEVO or MCH-PED
         local volume_name=vc_daqDA-${daname}
 

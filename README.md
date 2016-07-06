@@ -21,6 +21,16 @@ You must have [docker](http://www.docker.com/products/docker) and [docker-compos
 installed on your machine (if you are on a Mac, [Docker for Mac beta](https://download.docker.com/mac/beta/Docker.dmg)
 brings you both.
 
+In order to get X11 display working you need to add your machine IP to xhost. That is done automatically by the
+functions in `alice-online-functions`, but for this to work on Mac, you need to install one package that will mimic
+the `ip` linux command  :
+
+```bash
+brew install iproute2mac
+```
+
+where we assume that you have `brew` installed on you Mac, of course ;-) 
+
 # Installation 
 
 After having installed Docker on your machine, you should then `git clone` this
@@ -128,3 +138,4 @@ Note that the 3 main online databases are handled by the same "machine" (datedb)
 for the sake of simplicity of this dev. setup. Nothing prevents to change that
  to a more realistic scenario with one server for each database, if need be 
  (just change the relevant docker-compose.yml)
+
