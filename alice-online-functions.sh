@@ -12,14 +12,7 @@
 
 ali_getmyip() {
 
-    case "$OSTYPE" in
-        linux*)
-            ip route get 8.8.8.8 | head -1 | cut -d' ' -f8
-            ;;
-        darwin*)
-            0.0.0.0
-            ;;
-    esac
+    ip route get 8.8.8.8 | head -1 | cut -d' ' -f8
 }
 
 ali_xquartz_if_not_running() {
@@ -43,7 +36,6 @@ ali_xquartz_if_not_running() {
     if [[ "$(launchctl list | grep startx | cut -c 1)" == "-" ]]; then
         open -a XQuartz
         sleep 2
-        xhost + $(getmyip)
     fi
 }
 
