@@ -50,14 +50,15 @@ ali_docker_run() {
             ;;
     esac
 
-    xhost +$(ali_getmyip)
 
     case "$OSTYPE" in
         darwin*)
             docker run -e DISPLAY=$(ali_getmyip):0 -v /tmp/.X11-unix:/tmp/.X11-unix -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+            xhost +$(ali_getmyip)
             ;;
         *)
-    docker run -e DISPLAY=:0 -v /tmp/.X11-unix:/tmp/.X11-unix -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+            docker run -e DISPLAY=unix$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /etc/localtime:/etc/localtime -e TZ="Europe/Paris" $@
+            xhost + # fixme, there should be a better way...
         ;;
     esac
 }
@@ -121,6 +122,26 @@ ali_amore() {
         $cmd
 }
 
+ali_dev_env() {
+
+    # define some variables indicating where
+    # to find, locally (i.e. on your host, not in the containers)
+    # the code to be developped
+
+    export ALI_DEV_ENV_PATH_AMORE=${ALI_DEV_ENV_PATH_AMORE:-$HOME/alicesw/run2/amore}
+    export ALI_DEV_ENV_PATH_AMORE_MODULES=${ALI_DEV_ENV_PATH_AMORE_MODULES:-$HOME/alicesw/run2/amore_modules}
+    export ALI_DEV_ENV_PATH_DOTGLOBUS=${ALI_DEV_ENV_PATH_DOTGLOBUS:-${HOME}/.globus}
+}
+
+ali_check_dir() {
+
+    if ! test -d "$1"; then
+        ali_echo_error "Directory $1 does not exist !"
+        return 1
+    fi
+    return 0
+}
+
 ali_amore_dev() {
     # create an amore container
     # with the proper links etc...
@@ -128,15 +149,22 @@ ali_amore_dev() {
     # note the vc_amore_site_dev (_dev) volume, vs vc_amore_site (no _dev)
     # for the other functions above
     local host_name=$1
+
+    ali_dev_env
+
+    ali_check_dir ${ALI_DEV_ENV_PATH_AMORE_MODULES} || return
+    ali_check_dir ${ALI_DEV_ENV_PATH_AMORE} || return
+    ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
+
     ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_amore_site_dev:/amoreSite \
         -v vc_amore_cdb:/local/cdb \
         -v vc_amore_opt:/opt/amore \
-        -v ${HOME}/alicesw/run2/amore_modules/:/amore_modules \
-        -v ${HOME}/alicesw/run2/amore/:/amore \
-        -v ${HOME}/.globus:/root/.globus \
+        -v ${ALI_DEV_ENV_PATH_AMORE_MODULES}:/amore_modules \
+        -v ${ALI_DEV_ENV_PATH_AMORE}:/amore \
+        -v ${ALI_DEV_ENV_PATH_DOTGLOBUS}:/root/.globus \
         --link dockeraliceonline_datedb_1 \
         --link dockeraliceonline_dim_1 \
         --link dockeraliceonline_infologger_1 \
@@ -323,7 +351,7 @@ ali_amoreGui() {
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
         -v vc_amore_site:/amoreSite \
-        -v $PWD/ssh-user.daq:/home/daq/.ssh \
+        -v vc_home_daq:/home/daq \
         -v vc_amore_cdb:/local/cdb \
         --link dockeraliceonline_dim_1 \
         --net dockeraliceonline_default \
@@ -567,16 +595,28 @@ EOF
       docker-compose down
     }
 
+    ali_echo_color() {
+    
+        echo -e "$1$2\033[0m"
+    }
+    
+    ali_echo_error() {
+    
+        ali_echo_color "\033[0;31m$1"
+    }
+
+    ali_echo_strong() {
+    
+        ali_echo_color "\033[1;30m$1"
+    }
+    
     ali_echo() {
     
-      RED='\033[0;31m'
-      NC='\033[0m' 
-
-      echo -e "${RED}==================== $1${NC}"
+      ali_echo_strong "==================== $1"
       shift
       $@
     }
-    
+   
     ali_bootstrap() {
 
       # - create a default mysql DATE database

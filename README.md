@@ -139,3 +139,81 @@ for the sake of simplicity of this dev. setup. Nothing prevents to change that
  to a more realistic scenario with one server for each database, if need be 
  (just change the relevant docker-compose.yml)
 
+# Developing in containers
+
+In order to be able to develop your code, the idea is that you checkout it locally
+ and then mount it in the container where it is built (and is stored in a data volume).
+
+The local location of the source code is expected to be found in some environment variables  defined in the `ali_dev_env` function in `alice-online-functions.sh`) 
+
+
+| env variable name | default value |
+|-------------------|---------------|
+| ALI_DEV_ENV_PATH_AMORE | $HOME/alicesw/run2/amore |
+| ALI_DEV_ENV_PATH_AMORE_MODULES | $HOME/alicesw/run2/amore_modules |
+| ALI_DEV_ENV_PATH_DOTGLOBUS | ${HOME}/.globus |
+
+For instance, if you try to enter a container used to develop amore using the `ali_amore_dev` command,
+you'll most probably be greeted with an error :
+
+```
+> ali_amore_dev
+Directory /home/laurent/alicesw/run2/amore_modules does not exist !
+```
+
+At this point what you have to do is checkout the relevant code in the right directory (or define accordingly the
+environment variables above if you do not use the default locations)
+
+```
+> mkdir -p $HOME/alicesw/run2
+> cd $HOME/alicesw/run2
+> svn checkout --username your_cern_username https://svn.cern.ch/reps/alicedaq/Software/amore/trunk amore
+> svn checkout https://svn.cern.ch/reps/alicedaq/Software/amore_modules/trunk amore_modules
+```
+
+(you only need to specify your CERN username the first time you make a checkout from a CERN svn repository, and only
+if your username on your local machine is different from your CERN username)
+
+Once this is done, you should be able to enter your development container :
+
+```
+> ali_amore_dev
+w.x.y.z being added to access control list
+[root@6989af44b3c4 /]# 
+```
+
+The number after `root@` will be different on your machine (and each time you restart the containers), as it's the
+id of the container. It's also the hostname of that "machine". If you want/need to change it, you can, using the
+first argument of the `ali_amore_dev` command.
+
+
+```
+> ali_amore_dev mybeautifulcontainer
+w.x.y.z being added to access control list
+[root@mybeautifulcontainer /]# 
+```
+
+All the interesting directories are to be found at the root directory in the container : 
+
+```
+[root@mybeautifulcontainer /]# ls /
+amore amoreSite amore_modules ...
+[root@mybeautifulcontainer /]# cd /amore
+[root@mybeautifulcontainer /]# make
+[root@mybeautifulcontainer /]# make install
+```
+
+The last command installs amore into `/opt/amore` "as usual". Except that this 
+`/opt/amore` is actually residing on a data volume that has been mounted into the container (and thus its live cycle
+is indenpendant of that of the container).
+
+If you are on Linux, you can have a feeling for that using : 
+
+```
+> sudo ls -al /var/lib/docker/volumes/vc_amore_opt/_data 
+```
+
+The `vc_` prefix is not docker-defined, but is a convention I'm using to denote Volume Containers.
+
+
+
