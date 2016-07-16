@@ -131,6 +131,7 @@ ali_dev_env() {
     export ALI_DEV_ENV_PATH_AMORE=${ALI_DEV_ENV_PATH_AMORE:-$HOME/alicesw/run2/amore}
     export ALI_DEV_ENV_PATH_AMORE_MODULES=${ALI_DEV_ENV_PATH_AMORE_MODULES:-$HOME/alicesw/run2/amore_modules}
     export ALI_DEV_ENV_PATH_DOTGLOBUS=${ALI_DEV_ENV_PATH_DOTGLOBUS:-${HOME}/.globus}
+    export ALI_DEV_ENV_PATH_ALIROOT_DATE=${ALI_DEV_ENV_PATH_ALIROOT_DATE:-$HOME/alicesw/run2/aliroot-date}
 }
 
 ali_check_dir() {
@@ -148,7 +149,6 @@ ali_amore_dev() {
     # than can be used to compile amore core libraries and debug them
     # note the vc_amore_site_dev (_dev) volume, vs vc_amore_site (no _dev)
     # for the other functions above
-    local host_name=$1
 
     ali_dev_env
 
@@ -156,6 +156,8 @@ ali_amore_dev() {
     ali_check_dir ${ALI_DEV_ENV_PATH_AMORE} || return
     ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
 
+    local host_name=$1
+    
     ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
@@ -201,9 +203,17 @@ ali_amore_modules_dev() {
 }
 
 ali_da_dev() {
+
+    ali_dev_env
+
+    ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
+    ali_check_dir ${ALI_DEV_ENV_PATH_ALIROOT_DATE} || return
+
     local hostname=${1:-"dadev"}
     local detectorcode=${2:-"MCH"}
     local runnumber=${3:-123}
+#        -v ${HOME}/alicesw/repos/AliRoot:$HOME/alicesw/repos/AliRoot:ro \
+
     ali_docker_run -it --rm \
         -v $(pwd):/daoutput \
         -v vc_date_site:/dateSite \
@@ -215,7 +225,6 @@ ali_da_dev() {
         -v ${HOME}/.globus:/root/.globus:ro \
         -v ${HOME}/alicesw/run2/aliroot-date/AliRoot:/alicesw/AliRoot:ro \
         -v ${HOME}/alicesw/run2/aliroot-date/alidist:/alicesw/alidist:ro \
-        -v ${HOME}/alicesw/repos/AliRoot:$HOME/alicesw/repos/AliRoot:ro \
         --link dockeraliceonline_datedb_1 \
         --link dockeraliceonline_dim_1 \
         --link dockeraliceonline_infologger_1 \
