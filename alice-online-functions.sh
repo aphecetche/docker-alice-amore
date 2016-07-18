@@ -64,7 +64,7 @@ ali_docker_run() {
 }
 
 ali_volumes() {
-    echo "vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner"
+    echo "vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner vc_da_sw vc_daqDA-MCH-BPEVO vc_daqDA-MCH-OCC vc_daqDA-MCH-PED"
 }
 
 ali_date() {
@@ -433,7 +433,8 @@ ali_generate_ssh_configs() {
 
     echo "WARNING : you are about to remove the following volumes"
     echo $(ali_volumes)
-    read -p "Are you sure you want to do that (yes/no) ? " YESNO
+    echo -n "Are you sure you want to do that (yes/no) ?"
+    read YESNO
 
     if [ "$YESNO" == "yes" ]; then
 
