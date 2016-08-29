@@ -172,7 +172,7 @@ services:
     cpu_shares: 256 
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin/phpmyadmin:4.6.3-1
     links:
       - datedb 
     ports:
