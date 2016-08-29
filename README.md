@@ -141,6 +141,8 @@ for the sake of simplicity of this dev. setup. Nothing prevents to change that
 
 # Developing in containers
 
+## Amore and/or Amore modules
+
 In order to be able to develop your code, the idea is that you checkout it locally
  and then mount it in the container where it is built (and is stored in a data volume).
 
@@ -151,7 +153,9 @@ The local location of the source code is expected to be found in some environmen
 |-------------------|---------------|
 | ALI_DEV_ENV_PATH_AMORE | $HOME/alicesw/run2/amore |
 | ALI_DEV_ENV_PATH_AMORE_MODULES | $HOME/alicesw/run2/amore_modules |
-| ALI_DEV_ENV_PATH_DOTGLOBUS | ${HOME}/.globus |
+| ALI_DEV_ENV_PATH_DOTGLOBUS | $HOME/.globus |
+| ALI_DEV_ENV_PATH_ALIROOT_DATE | $HOME/alicesw/run2/aliroot-date |
+
 
 For instance, if you try to enter a container used to develop amore using the `ali_amore_dev` command,
 you'll most probably be greeted with an error :
@@ -205,15 +209,43 @@ amore amoreSite amore_modules ...
 
 The last command installs amore into `/opt/amore` "as usual". Except that this 
 `/opt/amore` is actually residing on a data volume that has been mounted into the container (and thus its live cycle
-is indenpendant of that of the container).
+is independent of that of the container).
 
-If you are on Linux, you can have a feeling for that using : 
+If you are on Linux (and did not change the location of Docker runtime `/var/lib/docker`), you can have a feeling for that using : 
 
 ```
 > sudo ls -al /var/lib/docker/volumes/vc_amore_opt/_data 
 ```
 
 The `vc_` prefix is not docker-defined, but is a convention I'm using to denote Volume Containers.
+
+
+So far so good for amore and amore modules. 
+
+## Detector Algorithms (DA)
+
+Now for the DA it's getting a bit more involved as you have to build your AliRoot for developing them...
+
+> You need a sizeable amount of free disk space, 
+> as one build/installation of AliRoot with DAs take about 40 GB 
+> of disk...
+> This is due to the fact that DAs are statically linked, thus one DA
+> executable is about 200 MB. And, at the time of this writing,
+> there are 57 DAs... so that's already more than 12 GB just for DA
+> executables...
+
+```
+> (docker-compose up -d)
+> ali_da_dev
+cd /alicesw
+aliBuild -z date build AliRoot -d --disable AliEn-Runtime,GEANT4_VMC,GEANT3,fastjet,GCC-Toolchain --defaults daq
+alienv enter AliRoot/latest-date
+```
+
+Note that alien has been disabled. It's a slight inconvenience (i.e. you won't be able to access files directly from
+alien) but with alien enabled I was not able to compile...
+
+Next time you enter the `dadev` container using `ali_da_dev` the `alienv enter` bit will be done automatically.
 
 
 
