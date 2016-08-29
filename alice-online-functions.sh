@@ -4,8 +4,8 @@
 # for amore
 #
 # Most of the functions here (except the one starting with ali_make_ which
-# are used only once by the ali_bootstrap command) assume that the 
-# docker-compose up -d command has been executed so the required 
+# are used only once by the ali_bootstrap command) assume that the
+# docker-compose up -d command has been executed so the required
 # containers are running.
 #
 #
@@ -157,7 +157,7 @@ ali_amore_dev() {
     ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
 
     local host_name=$1
-    
+
     ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
@@ -425,24 +425,27 @@ ali_generate_ssh_configs() {
 
         for vol in $(echo $(ali_volumes) | tr " " "\n")
         do
-            docker volume create --name $vol
+            docker volume create --name $vol || return 1
         done
+        return 0
     }
 
     ali_remove_volumes() {
 
     echo "WARNING : you are about to remove the following volumes"
     echo $(ali_volumes)
-    echo -n "Are you sure you want to do that (yes/no) ?"
+    echo -n "Are you sure you want to do that (yes/no) ? "
     read YESNO
 
-    if [ "$YESNO" == "yes" ]; then
+    echo "YESNO=$YESNO"
+    if  [ "$YESNO" = "yes" ]; then
 
             for vol in $(echo $(ali_volumes) | tr " " "\n")
             do
                     docker volume rm $vol
             done
     fi
+    return 0
     }
 
     ali_daqDB_query() {
@@ -451,40 +454,61 @@ ali_generate_ssh_configs() {
           -v vc_date_db:/var/lib/mysql \
           --net dockeraliceonline_default alice-date \
           /date/db/Linux/daqDB_query "$1"
+      return $?
     }
 
     ali_make_images() {
 
       # download our base images
-      docker-compose pull datedb
-      docker-compose pull phpmyadmin
+      docker-compose pull datedb || return 1
+      docker-compose pull phpmyadmin || return 2
 
       # build the alice-date image
-      docker-compose build dim
+      docker-compose build dim || return 3
       # build the alice-amore image
-      docker-compose build agentrunner
+      docker-compose build agentrunner || return 4
       # build the alice-online-devel image
-      docker-compose build dadev
+      docker-compose build dadev || return 5
       # build the alice-more image
-      docker-compose build archiver
+      docker-compose build archiver || return 6
       # build the alice-online-devel
-      docker-compose build dadev
+      docker-compose build dadev || return 7
+      return 0
     }
 
     ali_up_datedb() {
-    
-      # get the mysql server up 
-      docker-compose up -d datedb
 
-      # wait for mysql to come up
-      sleep 10
+      # get the mysql server up
+      docker-compose up -d datedb || return 1
+
+      n="0"
+
+      while [ $n -lt 60 ]
+      do
+          # try to access a database to know if mysql has indeed started
+          docker run -i --rm \
+              -v vc_date_db:/var/lib/mysql \
+              --net dockeraliceonline_default \
+              alice-date \
+              mysql -uroot -pdate -hdatedb -e "use mysql"
+
+          if [ $? -eq 0 ]; then
+              echo "datedb is up after $n attempts"
+              return 0
+          else
+              sleep 1
+          fi
+          n=$[$n+1]
+      done
+
+      return 1 
     }
 
     ali_make_datedb() {
 
-      ali_make_volumes
+      ali_make_volumes || return 1
 
-      ali_up_datedb
+      ali_up_datedb || return 2
 
       # create the databases
       docker run -i --rm \
@@ -500,50 +524,64 @@ ali_generate_ssh_configs() {
       LOGBOOK
       daq daq
 EOF
+    if [ $? -ne 0 ]; then
+        return 3
+    fi
+
+    ali_echo "Databases created"
 
       # populate the databases
-      docker run -i --rm \
-          -v vc_date_site:/dateSite \
-          -v vc_date_db:/var/lib/mysql \
-          --net dockeraliceonline_default \
-          alice-date \
-          /date/.commonScripts/newDateSite.sh <<EOF
-      /dateSite
-      DATE_CONFIG daq daq datedb
-      root
-      dim
-      DATE
-      DATE_LOG daq daq datedb
-      LOGBOOK daq daq datedb
-      y
-      DAQ_TEST
-      y
-      y
+    docker run -i --rm \
+        -v vc_date_site:/dateSite \
+        -v vc_date_db:/var/lib/mysql \
+        --net dockeraliceonline_default \
+        alice-date \
+        /date/.commonScripts/newDateSite.sh <<EOF
+    /dateSite
+    DATE_CONFIG daq daq datedb
+    root
+    dim
+    DATE
+    DATE_LOG daq daq datedb
+    LOGBOOK daq daq datedb
+    y
+    DAQ_TEST
+    y
+    y
 EOF
 
+    if [ $? -ne 0 ]; then
+        return 4
+    fi
+
+    ali_echo "Databases populated"
 
     # tweak the DATE_INFOLOGGER_LOGHOST which is not correctly set by the
     # newDataSite.sh script
 
+
     ali_daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
 
+#    docker-compose up -d infologger
+
     # set the FES access information
-    ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_DB','daq:daq@datedb/DATE_LOG','Database','',1);"
+    ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_DB','daq:daq@datedb/DATE_LOG','Database','',1);" || return 5
 
-    ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_PATH','/daqfxs','Database','',1);"
-    
-    docker-compose down
+    ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_PATH','/daqfxs','Database','',1);" || return 6
 
+    docker-compose down || return 7
+
+    return 0
 }
 
     ali_make_amoredb() {
-    
-        ali_make_volumes
 
-        ali_up_datedb
+        ali_make_volumes || return 1
+
+        ali_up_datedb || return 2
 
         # create the amore database
-        
+
         docker run -i --rm -v vc_date_db:/var/lib/mysql \
             --net dockeraliceonline_default \
             --entrypoint /bin/bash \
@@ -557,17 +595,23 @@ EOF
         daq daq
 EOF
 
+    if [ $? -ne 0 ]; then
+        return 3
+    fi
+
         # mount once the vc_amore_site volume so it is
         # populated with the initial image content
         docker run --rm -v vc_amore_site:/amoreSite \
             -v vc_date_db:/var/lib/mysql \
             --net dockeraliceonline_default \
             alice-amore \
-            /bin/true
+            /bin/true || return 4
 
-        docker-compose down
+        docker-compose down || return 5
+        return 0
     }
-    
+
+
     ali_make_agents() {
 
         # create a few default agents
@@ -599,34 +643,48 @@ EOF
       agentMCHDA
       DB
       MCH
-      /data_for_db_agents.raw    
+      /data_for_db_agents.raw
       DBPublisher
 EOF
       docker-compose down
     }
 
     ali_echo_color() {
-    
+
         echo -e "$1$2\033[0m"
     }
-    
+
     ali_echo_error() {
-    
-        ali_echo_color "\033[0;31m$1"
+
+        ali_echo_color "!!!!!!!!!!!!!!!! \033[0;31m$1"
     }
 
     ali_echo_strong() {
-    
+
         ali_echo_color "\033[1;30m$1"
     }
-    
+
     ali_echo() {
-    
+
       ali_echo_strong "==================== $1"
       shift
       $@
     }
-   
+
+    ali_exec() {
+
+        ali_echo $1
+        shift
+        $@
+        rc=$?
+        if [ $rc -ne 0 ]; then
+            ali_echo_error "Command $@ failed with return code $rc"
+            docker-compose down
+            return 1
+        fi
+        return 0
+    }
+
     ali_bootstrap() {
 
       # - create a default mysql DATE database
@@ -637,25 +695,25 @@ EOF
       # we must first get all the data volumes declared in
       # the docker-compose.yml file created
 
-      ali_echo "Make Volumes" ali_make_volumes
+      ali_exec "Make volumes" ali_make_volumes || return
 
-      ali_echo "Make Images" ali_make_images
+      ali_exec "Make Images" ali_make_images || return
 
-      ali_echo "Make and populate DATE DB" ali_make_datedb
+      ali_exec "Make and populate DATE DB" ali_make_datedb || return
 
-      ali_echo "Make and populate AMORE DB" ali_make_amoredb
+      ali_exec "Make and populate AMORE DB" ali_make_amoredb || return
 
-      ali_echo "Make some agents" ali_make_agents
+      ali_exec "Make some agents" ali_make_agents || return
 
-      ali_echo "Install some MCH DAs" /bin/true
+      ali_echo "Install some MCH DAs"
 
-      ali_up_datedb
+      ali_exec "Bringing up date DB" ali_up_datedb || return
 
-      ali_install_da MCH-BPEVO
-      ali_install_da MCH-OCC
-      ali_install_da MCH-PED
+      ali_exec "Installing DA MCH-BPEVO" ali_install_da MCH-BPEVO || return
+      ali_exec "Installing DA MCH-OCC" ali_install_da MCH-OCC || return
+      ali_exec "Installing DA MCH-PED" ali_install_da MCH-PED || return
 
-      docker-compose down
+      ali_exec "Getting docker containers down" docker-compose down || return
     }
 
     ali_install_da() {
