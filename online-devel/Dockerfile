@@ -8,7 +8,7 @@ RUN yum update -y && \
         environment-modules \
         libX11-devel mesa-libGLU-devel libXpm-devel libXft-devel gcc-gfortran \
         bzip2 bzip2-devel python-pip tmux screen ncurses-devel file vim rpm-build \
-        MySQL-devel ncdu
+        MySQL-devel ncdu glibc-static libxml2-static zlib-static openssl-static
 
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake && \
         cd /tmp && \
