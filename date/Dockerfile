@@ -1,4 +1,4 @@
-FROM hepsw/slc-base
+FROM hepsw/slc-base:6.7
 
 COPY yum-alice-daq.slc6_64.repo /etc/yum.repos.d/
 
