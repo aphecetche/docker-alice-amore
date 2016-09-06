@@ -85,7 +85,7 @@ To check the bootstraping was successfull, just use `docker-compose` to launch t
  databases.
 
 ```
-docker-compose up -d datedb phpmyadmin
+docker-compose up -d  phpmyadmin
 ```
 
 And point your browser to [localhost:8080](localhost:8080), using (root,date) as 

@@ -107,7 +107,10 @@ ali_amore() {
     # that can be used for the amore (modules) binaries
     local host_name=$1
     local cmd=${2:-/bin/bash}
-    local tty=${3:-t}
+    local tty=""
+    if [ $# -gt 2 ]; then
+        tty="t"
+    fi
     ali_docker_run -i$tty --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
@@ -120,6 +123,7 @@ ali_amore() {
         --hostname=$host_name \
         alice-amore \
         $cmd
+    return $?
 }
 
 ali_dev_env() {
@@ -486,11 +490,8 @@ ali_generate_ssh_configs() {
       while [ $n -lt 60 ]
       do
           # try to access a database to know if mysql has indeed started
-          docker run -i --rm \
-              -v vc_date_db:/var/lib/mysql \
-              --net dockeraliceonline_default \
-              alice-date \
-              mysql -uroot -pdate -hdatedb -e "use mysql"
+        docker-compose exec datedb \
+            mysql -uroot -pdate -hlocalhost -e "use mysql" > /dev/null 2>&1
 
           if [ $? -eq 0 ]; then
               echo "datedb is up after $n attempts"
@@ -509,6 +510,8 @@ ali_generate_ssh_configs() {
       ali_make_volumes || return 1
 
       ali_up_datedb || return 2
+
+      ali_echo "datedb is up. Calling newMysql.sh"
 
       # create the databases
       docker run -i --rm \
@@ -562,7 +565,9 @@ EOF
 
     ali_daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
 
-#    docker-compose up -d infologger
+    docker-compose up -d infologger
+
+    sleep 10
 
     # set the FES access information
     ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_DB','daq:daq@datedb/DATE_LOG','Database','',1);" || return 5
@@ -619,7 +624,9 @@ EOF
 
       ali_up_datedb
 
-      ali_amore tmpMCHQAshifter /opt/amore/bin/newAmoreAgent ' ' <<EOF
+      ali_echo "Making agent MCHQAshifter"
+
+      ali_amore tmpMCHQAshifter /opt/amore/bin/newAmoreAgent > /dev/null  2>&1 <<EOF
       MCHQAshifter
       runner-mchqashifter
       agentMCHQAshifter
@@ -628,7 +635,9 @@ EOF
       :
       PublisherQA
 EOF
-      ali_amore tmpMCHQC /opt/amore/bin/newAmoreAgent ' ' <<EOF
+
+      ali_echo "Making agent MCHQC"
+      ali_amore tmpMCHQC /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
       MCHQC
       runner-mchqc
       agentMCHQC
@@ -637,7 +646,8 @@ EOF
       :
       QualityControl
 EOF
-      ali_amore tmpMCHDA /opt/amore/bin/newAmoreAgent ' ' <<EOF
+      ali_echo "Making agent MCHDA"
+      ali_amore tmpMCHDA /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
       MCHDA
       runner-mchda
       agentMCHDA
@@ -697,7 +707,7 @@ EOF
 
       ali_exec "Make volumes" ali_make_volumes || return
 
-      ali_exec "Make Images" ali_make_images || return
+      ali_exec "Make images" ali_make_images || return
 
       ali_exec "Make and populate DATE DB" ali_make_datedb || return
 
