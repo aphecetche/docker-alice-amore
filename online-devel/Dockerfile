@@ -30,7 +30,7 @@ RUN yum install -y curl-devel && \
   cd .. && \
   rm -rf *2.8.3*
 
-RUN pip install alibuild
+RUN pip install alibuild==1.4.0.rc1
 
 COPY bashrc /root/.bashrc
 
