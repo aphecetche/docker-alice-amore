@@ -70,19 +70,19 @@ Depending on your network bandwith (and/or your machine CPUs) this can take a wh
 You can see which images have been built/downloaded :
 
 ```
-laurent@linux-mint ~/docker-alice-online $ docker images
-REPOSITORY              TAG                 IMAGE ID            CREATED              SIZE
-alice-online-devel      latest              5ec7c4c714b6        About a minute ago   6.083 GB
-alice-amore             latest              47ffb83c6269        9 minutes ago        5.569 GB
-alice-date              latest              96f4611463e7        About an hour ago    1.882 GB
-phpmyadmin/phpmyadmin   latest              8d7d99c9cd5a        7 days ago           57.02 MB
-mysql                   5.6                 01bbb21c400c        3 weeks ago          330 MB
-hepsw/slc-base          latest              7db783379fc3        20 months ago        135.6 MB
+laurent@arch ~/docker-alice-online $ docker images
+REPOSITORY                    TAG                 IMAGE ID            CREATED             SIZE
+alice-online-devel            latest              921a8abd3e86        10 minutes ago      5.006 GB
+alice-amore                   latest              5c95b69db66e        3 hours ago         4.297 GB
+alice-date                    latest              30d5eba44f5e        4 hours ago         907.7 MB
+mysql                         5.6                 6d4770ef651a        2 weeks ago         328.8 MB
+centos                        6.7                 fb5054b394b7        9 weeks ago         190.6 MB
+phpmyadmin/phpmyadmin         4.6.3-1             973ec7124fc8        9 weeks ago         57.01 MB
 ```
 
 To check the bootstraping was successfull, just use `docker-compose` to launch the
- DB service, and also the `phpMyAdmin` service to get a peek into the created 
- databases.
+ `phpMyAdmin` service (which will launch the DB service as well as a dependency)
+ to get a peek into the created databases.
 
 ```
 docker-compose up -d  phpmyadmin
@@ -239,7 +239,7 @@ Now for the DA it's getting a bit more involved as you have to build your AliRoo
 > ali_da_dev
 cd /alicesw
 aliBuild -z date build AliRoot -d --disable AliEn-Runtime,GEANT4_VMC,GEANT3,fastjet,GCC-Toolchain --defaults daq
-alienv enter AliRoot/latest-date
+alienv enter AliRoot/latest-date-daq
 ```
 
 Note that alien has been disabled. It's a slight inconvenience (i.e. you won't be able to access files directly from

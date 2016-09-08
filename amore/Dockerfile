@@ -1,10 +1,7 @@
 FROM alice-date
 
-RUN rpmdb --rebuilddb && \
-    yum clean all && \
-    yum update -y yum && \
-    yum update -y && \
-    yum install -y libXpm libGLU amore amore-web dqmv \
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm && \
+yum install -y libXpm libGLU amore amore-web dqmv \
     ACT aliroot
 
 COPY *.sh /

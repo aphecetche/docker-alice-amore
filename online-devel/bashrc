@@ -11,11 +11,14 @@ if [ -f /etc/bashrc ]; then
         . /etc/bashrc
 fi
 
-# start at /alicesw if available
+# use decently recent dev tools
+source scl_source enable git19 python27
+pip install --upgrade alibuild==1.4.0.rc1
 
+# start at /alicesw if available
 if [[ -d /alicesw ]]; then
     cd /alicesw
-    eval $(alienv load VO_ALICE@${ALI_WHAT}::latest-${ALI_VERSION})
+    eval $(alienv load VO_ALICE@${ALI_WHAT}::latest-${ALI_VERSION}-daq)
     aliBuild analytics on
 fi
 
