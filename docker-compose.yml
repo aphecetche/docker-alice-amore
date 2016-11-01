@@ -94,7 +94,7 @@ services:
     build: amore
     image: alice-amore
     volumes:
-      - vc_amore_site:/amoreSite
+      - vc_amore_site_dev:/amoreSite
       - vc_date_site:/dateSite
       - vc_amore_cdb:/local/cdb
       - /etc/localtime:/etc/localtime
@@ -107,8 +107,8 @@ services:
     environment: 
       DATE_RUN_NUMBER: 256289
       TZ: "Europe/Paris"
-    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r -e 470 -c 1
-    #entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r
+      #   entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r -e 470 -c 1
+    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r
     cpu_shares: 256 
 
 #   agentMCHDA:
@@ -181,6 +181,8 @@ services:
       PMA_HOST: datedb 
 
 volumes:
+  vc_amore_site_dev:
+    external: true
   vc_amore_site:
     external: true
   vc_date_site:
