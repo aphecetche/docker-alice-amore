@@ -1,6 +1,6 @@
 FROM alice-amore
 
-RUN yum install -y centos-release-scl
+RUN rpm --rebuilddb && yum install -y yum-plugin-ovl centos-release-scl
 
 RUN yum install -y tar git gettext-devel cmake3 \
         make wget which gcc gcc-c++ libtool automake autoconf zip \

@@ -2,5 +2,6 @@
 
 . /amore_env.sh
 
-exec "$@"
+printenv
 
+/usr/sbin/sshd -D
