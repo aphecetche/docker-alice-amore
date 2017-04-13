@@ -64,7 +64,7 @@ ali_docker_run() {
 }
 
 ali_volumes() {
-    echo "vc_amore_site vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner vc_da_sw vc_daqDA-MCH-BPEVO vc_daqDA-MCH-OCC vc_daqDA-MCH-PED"
+    echo "vc_amore_site vc_amore_site_dev vc_date_site vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner vc_da_sw vc_daqDA-MCH-BPEVO vc_daqDA-MCH-OCC vc_daqDA-MCH-PED"
 }
 
 ali_date() {
@@ -190,7 +190,7 @@ ali_amore_modules_dev() {
     ali_docker_run -it --rm \
         -v vc_date_site:/dateSite \
         -v vc_date_db:/var/lib/mysql \
-        -v vc_amore_site:/amoreSite \
+        -v vc_amore_site_dev:/amoreSite \
         -v vc_amore_cdb:/local/cdb \
         -v ${HOME}/alicesw/run2/amore_modules/:/amore_modules \
         -v ${HOME}/.globus:/root/.globus \
@@ -216,7 +216,6 @@ ali_da_dev() {
     local hostname=${1:-"dadev"}
     local detectorcode=${2:-"MCH"}
     local runnumber=${3:-123}
-#        -v ${HOME}/alicesw/repos/AliRoot:$HOME/alicesw/repos/AliRoot:ro \
 
     ali_docker_run -it --rm \
         -v $(pwd):/daoutput \
@@ -646,6 +645,16 @@ EOF
       :
       QualityControl
 EOF
+      ali_echo "Making agent MCHExpert"
+      ali_amore tmpMCHExpert /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
+      MCHExpert
+      runner-mchexpert
+      agentMCHExpert
+      MCH
+      MCH
+      :
+      AmoreMCH
+EOF
       ali_echo "Making agent MCHDA"
       ali_amore tmpMCHDA /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
       MCHDA
@@ -715,13 +724,15 @@ EOF
 
       ali_exec "Make some agents" ali_make_agents || return
 
-      ali_echo "Install some MCH DAs"
-
       ali_exec "Bringing up date DB" ali_up_datedb || return
+      
+      ali_echo "Install some MCH DAs"
 
       ali_exec "Installing DA MCH-BPEVO" ali_install_da MCH-BPEVO || return
       ali_exec "Installing DA MCH-OCC" ali_install_da MCH-OCC || return
       ali_exec "Installing DA MCH-PED" ali_install_da MCH-PED || return
+
+      ali_exec "Installing some amore_modules" ali_install_amore_modules QA MCH MTR TRI DB || return
 
       ali_exec "Getting docker containers down" docker-compose down || return
     }

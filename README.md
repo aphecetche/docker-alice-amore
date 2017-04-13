@@ -93,6 +93,7 @@ And point your browser to [localhost:8080](localhost:8080), using (root,date) as
  DATE_CONFIG, DATE_LOG, ECS_CONFIG, LOGBOOK, and AMORE, as well as their respective tables
  (use phpmyadmin to navigate in those tables).
 
+
 # Usage 
 
 The normal usage (once everything has been bootstrapped correctly) is to launch the set of containers 
@@ -138,6 +139,39 @@ Note that the 3 main online databases are handled by the same "machine" (datedb)
 for the sake of simplicity of this dev. setup. Nothing prevents to change that
  to a more realistic scenario with one server for each database, if need be 
  (just change the relevant docker-compose.yml)
+
+# ali_bootstrap details
+
+You can skip this section if everything works as expected ;-)
+
+The `ali_bootstrap` function is performing the following operations, so if something goes wrong, you may want to
+explicitely try that one operation alone to debug further :
+
+- "Make the vc_* volumes" ali_make_volumes 
+- "Make all the images" ali_make_images 
+- "Make and populate DATE DB" ali_make_datedb 
+- "Make and populate AMORE DB" ali_make_amoredb 
+- "Make some agents (e.g. MCHQAshifter)" ali_make_agents 
+- "Bringing up date DB" ali_up_datedb 
+- "Installing DA MCH-BPEVO" ali_install_da MCH-BPEVO 
+- "Installing DA MCH-OCC" ali_install_da MCH-OCC 
+- "Installing DA MCH-PED" ali_install_da MCH-PED 
+- "Installing some amore_modules" ali_install_amore_modules QA MCH MTR TRI DB 
+
+A typical thing to check if whether the various `vc_` volumes have been corrected set up. To look at a volume, one way
+is : 
+
+```
+> docker run -it --rm -v vc_amore_site:/data centos:6.7 /bin/bash
+
+root@somenumber /]# ls -alR /data
+root@somenumber /]# exit
+```
+
+Please note that :
+- this works independently of whether or not you have done `docker-compose up -d`
+- you can use whatever image in place of `centos:6.7` if you'd like to, but that one is nice because you know you have
+    it already
 
 # Developing in containers
 
@@ -252,7 +286,7 @@ Now for the DA it's getting a bit more involved as you have to build your AliRoo
 > (docker-compose up -d)
 > ali_da_dev
 cd /alicesw
-aliBuild -z date build AliRoot -d --disable AliEn-Runtime,GEANT4_VMC,GEANT3,fastjet,GCC-Toolchain --defaults daq
+aliBuild -z date build AliRoot -d --disable AliEn-Runtime,GEANT4_VMC,GEANT3,fastjet,GCC-Toolchain,Vc --defaults daq
 alienv enter AliRoot/latest-date-daq
 ```
 
