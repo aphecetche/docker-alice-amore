@@ -1,0 +1,39 @@
+
+#!/usr/bin/env sh
+
+ali_start
+
+daname=$1
+detectorcode=$2
+amore_da_name=$3
+# insure rawfile is an absolute path
+pushd
+rawfile=$(cd "$(dirname "$4")"; pwd)/$(basename "$4")
+popd
+daexe=${daname/-}da.exe
+
+if [ "$daname" = "MCH-OCC" ]; then
+    daexe="MUONTRKOCCda.exe"
+fi
+
+docker run -it --rm \
+-v $rawfile:/file.raw \
+-v $(pwd):/daoutput \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v vc_amore_site:/amoreSite \
+-v vc_amore_cdb:/local/cdb \
+-v vc_daq_fxs:/daqfxs \
+-v vc_daqDA-$daname:/opt/daqDA-$daname \
+-e TZ="Europe/Paris" \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_datedb_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_dim_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_infologger_1 \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+-e DATE_DETECTOR_CODE="$detectorcode" \
+-e DATE_SITE=/dateSite \
+-e DATE_RUN_NUMBER=$(ali_getrunnumber $rawfile) \
+-e DATE_ROLE_NAME=${amore_da_name} \
+-w /daoutput \
+alice-amore \
+/opt/daqDA-$daname/$daexe /file.raw

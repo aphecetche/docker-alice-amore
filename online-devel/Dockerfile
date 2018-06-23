@@ -28,7 +28,8 @@ RUN ln -s /usr/bin/cmake3 /usr/bin/cmake && \
         make && make install && \
         rm -rf /tmp/gsl* 
         
-RUN pip install --upgrade pip && pip install alibuild==1.4.0.rc1
+#RUN pip install --upgrade pip && pip install alibuild
+RUN pip install alibuild
 
 COPY bashrc /root/.bashrc
 COPY mock-redhat-release-slc6.txt /etc/redhat-release

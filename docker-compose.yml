@@ -97,7 +97,6 @@ services:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
       - vc_amore_cdb:/local/cdb
-      - /etc/localtime:/etc/localtime
     links:
       - dim
       - datedb
@@ -118,9 +117,8 @@ services:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
       - vc_amore_cdb:/local/cdb
-      - /etc/localtime:/etc/localtime
       - /alice/data:/alice/data
-      - /tmp/filelist.txt:/filelist.txt
+      - ${DOCKER_ALICEONLINE_SRC}/filelist.txt:/filelist.txt
     links:
       - dim
       - datedb
@@ -140,9 +138,8 @@ services:
       - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
       - vc_amore_cdb:/local/cdb
-      - /etc/localtime:/etc/localtime
       - /alice/data:/alice/data
-      - /tmp/filelist.txt:/filelist.txt
+      - ${DOCKER_ALICEONLINE_SRC}/filelist.txt:/filelist.txt
     links:
       - dim
       - datedb

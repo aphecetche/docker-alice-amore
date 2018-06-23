@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+docker-compose -p ${DOCKER_ALICEONLINE_PROJECTNAME} -f ${DOCKER_ALICEONLINE_SRC}/docker-compose.yml down

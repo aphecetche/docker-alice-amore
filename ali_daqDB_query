@@ -1,0 +1,7 @@
+#!/urs/bin/env sh
+docker run -i --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default alice-date \
+/date/db/Linux/daqDB_query "$1"
+exit $?

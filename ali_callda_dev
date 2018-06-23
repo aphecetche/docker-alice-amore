@@ -1,0 +1,30 @@
+
+#!/usr/bin/env sh
+
+ali_start
+
+dapath=$1 # dapath _must_ be an absolute path
+# otherwise the -v $rawfile:/file.raw will mount a directory ...
+detectorcode=$2
+amore_da_name=$3
+rawfile=$4
+runnumber=$(ali_getrunnumber $rawfile)
+docker run -it --rm \
+-v ${rawfile}:/file.raw \
+-v $(pwd):/daoutput \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v vc_amore_site:/amoreSite \
+-v vc_amore_cdb:/local/cdb \
+-v vc_da_sw:/alicesw/sw \
+-v vc_daq_fxs:/daqfxs \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_datedb_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_dim_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_infologger_1 \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+-e DATE_DETECTOR_CODE="$detectorcode" \
+-e DATE_SITE=/dateSite \
+-e DATE_RUN_NUMBER=$runnumber \
+-e DATE_ROLE_NAME=${amore_da_name} \
+alice-online-devel \
+$dapath /file.raw

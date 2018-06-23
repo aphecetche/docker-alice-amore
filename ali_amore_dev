@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+
+# create an amore container
+# with the proper links etc...
+# than can be used to compile amore core libraries and debug them
+# note the vc_amore_site_dev (_dev) volume, vs vc_amore_site (no _dev)
+# for the other functions above
+
+ali_check_dir ${ALI_DEV_ENV_PATH_AMORE_MODULES} || return
+ali_check_dir ${ALI_DEV_ENV_PATH_AMORE} || return
+ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
+
+ali_start
+
+host_name=${1:-ali-amore-dev-default-hostname}
+
+docker_run_withX11 -it --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v vc_amore_site_dev:/amoreSite \
+-v vc_amore_cdb:/local/cdb \
+-v vc_amore_opt:/opt/amore \
+-v ${ALI_DEV_ENV_PATH_AMORE_MODULES}:/amore_modules \
+-v ${ALI_DEV_ENV_PATH_AMORE}:/amore \
+-v ${ALI_DEV_ENV_PATH_DOTGLOBUS}:/root/.globus \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_datedb_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_dim_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_infologger_1 \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+--hostname=$host_name \
+--cap-add sys_ptrace \
+--name=$host_name \
+alice-online-devel \
+/bin/bash

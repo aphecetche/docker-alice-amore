@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+
+
+ali_make_volumes || exit 1
+
+.ali_up_datedb || exit 2
+
+# create the amore database
+
+docker run -i --rm -v vc_date_db:/var/lib/mysql \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+--entrypoint /bin/bash \
+-e AMORE=/opt/amore \
+-e PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/amore/bin \
+alice-amore \
+            /opt/amore/bin/amoreMysqlSetup <<EOF
+        datedb
+        date
+        AMORE
+        daq daq
+EOF
+
+if [ $? -ne 0 ]; then
+    exit 3
+fi
+
+# mount once the vc_amore_site volume so it is
+# populated with the initial image content
+docker run --rm -v vc_amore_site:/amoreSite \
+-v vc_date_db:/var/lib/mysql \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+alice-amore \
+/bin/true || exit 4
+
+docker-compose down || exit 5
+exit 0

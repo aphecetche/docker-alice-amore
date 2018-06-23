@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+echo "vc_amore_site vc_date_site vc_amore_site_dev vc_date_db vc_amore_cdb vc_daq_fxs vc_home_daq vc_home_dqm vc_ssh_daqfxs vc_ssh_agentrunner vc_da_sw vc_daqDA-MCH-BPEVO vc_daqDA-MCH-OCC vc_daqDA-MCH-PED"

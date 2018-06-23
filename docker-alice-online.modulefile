@@ -1,0 +1,22 @@
+#%Modules1.0
+proc ModulesHelp { } {
+    puts stderr "Setup environment for alice online dev in docker"
+}
+
+module-whatis "environment for using alice online dev in docker"
+
+module load docker
+
+setenv DOCKER_ALICEONLINE_PROJECTNAME alice-online
+setenv DOCKER_ALICEONLINE_SRC $::env(HOME)/github.com/aphecetche/docker-$::env(DOCKER_ALICEONLINE_PROJECTNAME)
+setenv COMPOSE_PROJECT_NAME $::env(DOCKER_ALICEONLINE_PROJECTNAME)
+setenv COMPOSE_FILE $::env(DOCKER_ALICEONLINE_SRC)/docker-compose.yml
+
+setenv ALI_DEV_ENV_PATH_AMORE $::env(HOME)/alice/ali-master/amore 
+setenv ALI_DEV_ENV_PATH_AMORE_MODULES $::env(HOME)/alice/ali-master/amore_modules
+setenv ALI_DEV_ENV_PATH_DOTGLOBUS $::env(HOME)/.globus
+setenv ALI_DEV_ENV_PATH_ALIROOT_DATE $::env(HOME)/alice/ali-master/AliRoot
+
+append-path PATH $::env(DOCKER_ALICEONLINE_SRC)
+
+set-alias ali_did { ali_date did /opt/dim/linux/did }

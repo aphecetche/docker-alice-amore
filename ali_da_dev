@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+
+
+ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
+ali_check_dir ${ALI_DEV_ENV_PATH_ALIROOT_DATE} || return
+
+ali_start
+
+hostname=${1:-"dadev"}
+detectorcode=${2:-"MCH"}
+runnumber=${3:-123}
+
+docker_run_withX11 -it --rm \
+-v $(pwd):/daoutput \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v vc_amore_site:/amoreSite \
+-v vc_amore_cdb:/local/cdb \
+-v vc_daq_fxs:/daqfxs \
+-v vc_da_sw:/alicesw/sw \
+-v ${HOME}/.globus:/root/.globus:ro \
+-v ${HOME}/alice/ali-master/aliroot-date/AliRoot:/alicesw/AliRoot:ro \
+-v ${HOME}/alice/ali-master/aliroot-date/alidist:/alicesw/alidist:ro \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_datedb_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_dim_1 \
+--link ${DOCKER_ALICEONLINE_PROJECTNAME}_infologger_1 \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+--hostname ${hostname} \
+--name ${hostname} \
+-e DATE_DETECTOR_CODE="$detectorcode" \
+-e DATE_SITE=/dateSite \
+-e DATE_RUN_NUMBER=${runnumber} \
+-e DATE_ROLE_NAME=da \
+-e ALI_WHAT=AliRoot \
+-e ALI_VERSION=date \
+--cap-add sys_ptrace \
+alice-online-devel \
+/bin/bash

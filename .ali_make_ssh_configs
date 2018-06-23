@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+
+serverlist="daqfxs agentrunner"
+userlist="daq dqm"
+
+for server in $(echo $serverlist | tr " " "\n")
+do
+    echo $server
+    rm -rf ssh-server.$server
+    mkdir ssh-server.$server
+    cd ssh-server.$server
+    ssh-keygen -t rsa -f ssh_host_rsa_key -N '' -C '' -q
+    cd ..
+    cp sshd_config ssh-server.$server
+done
+
+for user in $(echo $userlist | tr " " "\n")
+do
+    rm -rf ssh-user
+    mkdir ssh-user
+    cd ssh-user
+    ssh-keygen -t rsa -f id_rsa -N '' -C '' -q
+    touch authorized_keys known_hosts
+    for server in $(echo $serverlist | tr " " "\n")
+    do
+        echo $(cat id_rsa.pub) $user@$server >> authorized_keys
+        echo $server $(cat ../ssh-server.$server/ssh_host_rsa_key.pub) >> known_hosts
+    done
+    echo "Protocol 2" > config
+    echo "StrictHostKeyChecking no" >> config
+    cd ..
+    
+    # now put the ssh-user directory into a volume
+    docker volume create --name vc_home_$user
+    docker run --name tmp$user -v vc_home_$user:/home/$user hepsw/slc-base rm -rf /home/$user/.ssh
+    docker cp ssh-user tmp$user:/home/$user/.ssh
+    docker rm tmp$user
+    
+    rm -rf ssh-user
+done
+
+for server in $(echo $serverlist | tr " " "\n")
+do
+    docker volume create --name vc_ssh_$server
+    docker run --name tmp$server -v vc_ssh_$server:/etc/ssh hepsw/slc-base /bin/true
+    docker cp ssh-server.$server/. tmp$server:/etc/ssh
+    docker rm tmp$server
+    rm -rf ssh-server.$server
+done

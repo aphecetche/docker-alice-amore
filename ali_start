@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+dexist ${DOCKER_ALICEONLINE_PROJECTNAME}_dim_1 && exit 0
+
+docker-compose -p ${DOCKER_ALICEONLINE_PROJECTNAME} -f ${DOCKER_ALICEONLINE_SRC}/docker-compose.yml up -d
