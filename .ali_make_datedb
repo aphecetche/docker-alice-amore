@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 
-ali_make_volumes || exit 1
+.ali_make_volumes || exit 1
 
 .ali_up_datedb || exit 2
 
-ali_echo "datedb is up. Calling newMysql.sh"
+.ali_echo "datedb is up. Calling newMysql.sh"
 
 # create the databases
 docker run -i --rm \
@@ -24,7 +24,7 @@ if [ $? -ne 0 ]; then
     exit 3
 fi
 
-ali_echo "Databases created"
+.ali_echo "Databases created"
 
 # populate the databases
 docker run -i --rm \
@@ -50,22 +50,22 @@ if [ $? -ne 0 ]; then
     exit 4
 fi
 
-ali_echo "Databases populated"
+.ali_echo "Databases populated"
 
 # tweak the DATE_INFOLOGGER_LOGHOST which is not correctly set by the
 # newDataSite.sh script
 
 
-ali_daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
+.ali_daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
 
 docker-compose up -d infologger
 
 sleep 10
 
 # set the FES access information
-ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_DB','daq:daq@datedb/DATE_LOG','Database','',1);" || exit 5
+.ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_DB','daq:daq@datedb/DATE_LOG','Database','',1);" || exit 5
 
-ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_PATH','/daqfxs','Database','',1);" || exit 6
+.ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_PATH','/daqfxs','Database','',1);" || exit 6
 
 docker-compose down || exit 7
 

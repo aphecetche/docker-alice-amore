@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 
-ali_make_volumes || exit 1
+.ali_make_volumes || exit 1
 
 .ali_up_datedb || exit 2
 

@@ -6,9 +6,9 @@
 # note the vc_amore_site_dev (_dev) volume, vs vc_amore_site (no _dev)
 # for the other functions above
 
-ali_check_dir ${ALI_DEV_ENV_PATH_AMORE_MODULES} || return
-ali_check_dir ${ALI_DEV_ENV_PATH_AMORE} || return
-ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
+.ali_check_dir ${ALI_DEV_ENV_PATH_AMORE_MODULES} || return
+.ali_check_dir ${ALI_DEV_ENV_PATH_AMORE} || return
+.ali_check_dir ${ALI_DEV_ENV_PATH_DOTGLOBUS} || return
 
 ali_start
 

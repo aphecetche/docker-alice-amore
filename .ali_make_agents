@@ -6,7 +6,7 @@
 
 .ali_up_datedb
 
-ali_echo "Making agent MCHQAshifter"
+.ali_echo "Making agent MCHQAshifter"
 
       ali_amore tmpMCHQAshifter /opt/amore/bin/newAmoreAgent > /dev/null  2>&1 <<EOF
       MCHQAshifter
@@ -18,7 +18,7 @@ ali_echo "Making agent MCHQAshifter"
       PublisherQA
 EOF
 
-ali_echo "Making agent MCHQC"
+.ali_echo "Making agent MCHQC"
       ali_amore tmpMCHQC /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
       MCHQC
       runner-mchqc
@@ -28,7 +28,7 @@ ali_echo "Making agent MCHQC"
       :
       QualityControl
 EOF
-ali_echo "Making agent MCHDA"
+.ali_echo "Making agent MCHDA"
       ali_amore tmpMCHDA /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
       MCHDA
       runner-mchda

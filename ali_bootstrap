@@ -8,22 +8,22 @@
 # we must first get all the data volumes declared in
 # the docker-compose.yml file created
 
-ali_exec "Make volumes" ali_make_volumes || exit
+.ali_exec "Make volumes" .ali_make_volumes || exit
 
-ali_exec "Make images" ali_make_images || exit
+.ali_exec "Make images" .ali_make_images || exit
 
-ali_exec "Make and populate DATE DB" ali_make_datedb || exit
+.ali_exec "Make and populate DATE DB" .ali_make_datedb || exit
 
-ali_exec "Make and populate AMORE DB" ali_make_amoredb || exit
+.ali_exec "Make and populate AMORE DB" .ali_make_amoredb || exit
 
-ali_exec "Make some agents" ali_make_agents || exit
+.ali_exec "Make some agents" .ali_make_agents || exit
 
-ali_echo "Install some MCH DAs"
+.ali_echo "Install some MCH DAs"
 
-ali_exec "Bringing up date DB" .ali_up_datedb || exit
+.ali_exec "Bringing up date DB" .ali_up_datedb || exit
 
-ali_exec "Installing DA MCH-BPEVO" ali_install_da MCH-BPEVO || exit
-ali_exec "Installing DA MCH-OCC" ali_install_da MCH-OCC || exit
-ali_exec "Installing DA MCH-PED" ali_install_da MCH-PED || exit
+.ali_exec "Installing DA MCH-BPEVO" .ali_install_da MCH-BPEVO || exit
+.ali_exec "Installing DA MCH-OCC" .ali_install_da MCH-OCC || exit
+.ali_exec "Installing DA MCH-PED" .ali_install_da MCH-PED || exit
 
-ali_exec "Getting docker containers down" docker-compose down || exit
+.ali_exec "Getting docker containers down" docker-compose down || exit

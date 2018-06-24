@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-.ali_echo $1
+.ali_echo "$1"
 shift
 $@
 rc=$?

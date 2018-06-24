@@ -1,4 +1,5 @@
-#!/urs/bin/env sh
+#!/usr/bin/env sh
+
 docker run -i --rm \
 -v vc_date_site:/dateSite \
 -v vc_date_db:/var/lib/mysql \
