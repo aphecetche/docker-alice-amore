@@ -256,19 +256,15 @@ If you are on Linux (and did not change the location of Docker runtime `/var/lib
 The `vc_` prefix is not docker-defined, but is a convention I'm using to denote Volume Containers.
 
 One last thing to get a working Amore agent is to setup the vc_amore_cdb volume. That step is a little manual so far,
-because we need to know the source OCDB. For instance : 
+because we need to know the source OCDB. For instance, assuming you used `module load AliRoot-OCDB` :
 
 ```
 docker-compose up -d agentrunner
-docker cp $HOME/alicesw/run2/aliroot-date/AliRoot/OCDB/GRP dockeraliceonline_agentrunner_1:/local/cdb
-docker cp $HOME/alicesw/run2/aliroot-date/AliRoot/OCDB/MUON dockeraliceonline_agentrunner_1:/local/cdb
+docker cp $ALIROOT_OCDB_ROOT/OCDB/GRP alice-online_agentrunner_1:/local/cdb
+docker cp $ALIROOT_OCDB_ROOT/OCDB/MUON alice-online_agentrunner_1:/local/cdb
 ```
 
-And also (depending on how your agent is setup in the docker-compose.yml file), copy some raw data to `vc_amore_site` :
-
-```
-docker cp /alice/data/2016/LHC16j/000256289/raw/16000256289037.8802.raw dockeraliceonline_agentMCHQAshifter_1:/amoreSite/
-```
+The data itself is accessed from anywhere in `/alice/data/` which is bind mounted in the agent(s) container(s).
 
 So far so good for amore and amore modules. 
 
