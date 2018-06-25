@@ -1,4 +1,4 @@
-version: '2'
+version: '2.2'
 
 services:
   datedb:
@@ -147,16 +147,18 @@ services:
       - agentFeeder
     hostname: runner-mchqashifter
     environment: 
-      DATE_RUN_NUMBER: 256289
+      #DATE_RUN_NUMBER: 256289
+      DATE_RUN_NUMBER: 287975
       TZ: "Europe/Paris"
       DEROOT_HOST: agentFeeder
       DEROOT_PORT: 1234
       #DEROOT_INPUT: collection:///filelist.txt
       #DATA_SOURCE: /alice/data/2017/LHC17a_MUON_TRK/000268552/raw/17000268552001.511.raw
       #DATA_SOURCE: /amoreSite/16000256289037.8802.raw
-      DATA_SOURCE: /alice/data/2016/LHC16j/000256289/raw/16000256289037.8802.raw
+      #DATA_SOURCE: /alice/data/2016/LHC16j/000256289/raw/16000256289037.8802.raw
+      DATA_SOURCE: /alice/data/2018/LHC18f/000287975/raw/18000287975019.1002.raw
     entrypoint: /agent_setup.sh -a MCHQAshifter -r
-    cpu_shares: 256 
+    cpus: 0.15
 
   amore-web:
     build: amore
