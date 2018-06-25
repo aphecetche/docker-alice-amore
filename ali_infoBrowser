@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+# create an amore container
+# with the proper links etc...
+# to run the infobrowser
+
+ali_start
+
+docker_run_withX11 -it --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+-e DATE_SITE=/dateSite \
+--name infoBrowser \
+alice-date \
+/launch_infoBrowser.sh

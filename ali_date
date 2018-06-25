@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+host_name=${1:-ali-date-default-hostname}
+command=${2:-/bin/bash}
+
+ali_start
+
+docker_run_withX11 -it --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v vc_daq_fxs:/daqfxs \
+-v vc_home_daq:/home/daq \
+-v vc_home_dqm:/home/dqm \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+--name=$host_name \
+--hostname=$host_name \
+alice-date \
+$command

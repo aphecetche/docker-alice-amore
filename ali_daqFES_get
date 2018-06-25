@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+docker run -it --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v vc_daq_fxs:/daqfxs \
+-v vc_home_daq:/home/daq \
+-v vc_home_dqm:/home/dqm \
+-v $(pwd):/tmp \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+-w /tmp \
+alice-date \
+/date/infoLogger/daqFES_get $1

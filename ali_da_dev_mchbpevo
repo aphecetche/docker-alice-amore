@@ -1,0 +1,4 @@
+
+    # insure rawfile is an absolute path for callda
+    rawfile=$(cd "$(dirname "$1")"; pwd)/$(basename "$1")
+    ali_callda_dev /alicesw/sw/slc6_x86-64/AliRoot/latest/bin/MCHBPEVOda.exe MCH mon-DA-MCH-1 $rawfile

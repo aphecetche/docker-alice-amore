@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+echo "WARNING : you are about to remove the following volumes"
+echo $(.ali_volumes)
+echo -n "Are you sure you want to do that (yes/no) ? "
+read YESNO
+
+echo "YESNO=$YESNO"
+if  [ "$YESNO" = "yes" ]; then
+
+    ali_stop
+        
+    for vol in $(echo $(.ali_volumes) | tr " " "\n")
+    do
+        docker volume rm $vol
+    done
+fi
+exit 0

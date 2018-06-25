@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+.ali_echo "$1"
+shift
+$@
+rc=$?
+if [ $rc -ne 0 ]; then
+    .ali_echo_error "Command $@ failed with return code $rc"
+    ali_stop
+    exit 1
+fi
+exit 0

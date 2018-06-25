@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+daname=$1 # DA name, without the daqDA- prefix, e.g. MCH-BPEVO or MCH-PED
+volume_name=vc_daqDA-${daname}
+
+docker volume create --name ${volume_name}
+
+docker run --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v ${volume_name}:/opt/daqDA-${daname} \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+--name tmp$daname \
+alice-date \
+yum install -y daqDA-$daname

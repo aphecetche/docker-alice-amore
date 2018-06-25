@@ -1,4 +1,4 @@
-version: '2'
+version: '2.2'
 
 services:
   datedb:
@@ -59,7 +59,7 @@ services:
       - datedb
       - infologger
     hostname: agentrunner
-    entrypoint: /amore_setup.sh /usr/sbin/sshd -D 
+    entrypoint: /sshd_setup.sh
 
   dadev:
     build: online-devel
@@ -75,7 +75,7 @@ services:
       - datedb
       - infologger
     hostname: dadev 
-    entrypoint: /amore_setup.sh /usr/sbin/sshd -D 
+    entrypoint: /sshd_setup.sh
 
   archiver:
     build: amore
@@ -88,69 +88,78 @@ services:
       - datedb
       - infologger
     hostname: archiver
-    entrypoint: /amore_setup.sh amoreArchiver -g db:amoreArchiverConfig.txt
+    entrypoint: /archiver_setup.sh
+
+  agentMCHExpert:
+    build: amore
+    image: alice-amore
+    volumes:
+      - vc_amore_site:/amoreSite
+      - vc_date_site:/dateSite
+      - vc_amore_cdb:/local/cdb
+    links:
+      - dim
+      - datedb
+      - infologger
+      - agentFeeder
+    hostname: runner-mchexpert
+    environment: 
+      DATE_RUN_NUMBER: 256289
+      TZ: "Europe/Paris"
+      DATA_SOURCE: /amoreSite/16000256289037.8802.raw 
+    entrypoint: /agent_setup.sh -a MCHExpert -r
+    cpu_shares: 256 
+
+  agentFeeder:
+    build: amore
+    image: alice-amore
+    volumes:
+      - vc_amore_site:/amoreSite
+      - vc_date_site:/dateSite
+      - vc_amore_cdb:/local/cdb
+      - /alice/data:/alice/data
+      - ${DOCKER_ALICEONLINE_SRC}/filelist.txt:/filelist.txt
+    links:
+      - dim
+      - datedb
+      - infologger
+    hostname: agentFeeder
+    environment: 
+      TZ: "Europe/Paris"
+      COLLECTION: "/filelist.txt"
+      DEROOT_PORT: 1234
+    entrypoint: /feeder_setup.sh 
+    cpu_shares: 256 
 
   agentMCHQAshifter:
     build: amore
     image: alice-amore
     volumes:
-      - vc_amore_site_dev:/amoreSite
+      - vc_amore_site:/amoreSite
       - vc_date_site:/dateSite
       - vc_amore_cdb:/local/cdb
-      - /etc/localtime:/etc/localtime
+      - /alice/data:/alice/data
+      - ${DOCKER_ALICEONLINE_SRC}/filelist.txt:/filelist.txt
     links:
       - dim
       - datedb
       - infologger
-    hostname: agentMCHQAshifter
-#    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/15000237401023.509.FILTER_RAWMUON_WITH_ALIPHYSICS_v5-06-04-01.raw -r
+      - agentFeeder
+    hostname: runner-mchqashifter
     environment: 
-      DATE_RUN_NUMBER: 256289
+      #DATE_RUN_NUMBER: 256289
+      DATE_RUN_NUMBER: 287975
       TZ: "Europe/Paris"
-      #   entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r -e 470 -c 1
-    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/16000256289037.8802.raw -r
-    cpu_shares: 256 
+      DEROOT_HOST: agentFeeder
+      DEROOT_PORT: 1234
+      #DEROOT_INPUT: collection:///filelist.txt
+      #DATA_SOURCE: /alice/data/2017/LHC17a_MUON_TRK/000268552/raw/17000268552001.511.raw
+      #DATA_SOURCE: /amoreSite/16000256289037.8802.raw
+      #DATA_SOURCE: /alice/data/2016/LHC16j/000256289/raw/16000256289037.8802.raw
+      DATA_SOURCE: /alice/data/2018/LHC18f/000287975/raw/18000287975019.1002.raw
+    entrypoint: /agent_setup.sh -a MCHQAshifter -r
+    cpus: 0.15
 
-#   agentMCHDA:
-#     build: amore
-#     image: alice-amore
-#     volumes:
-#       - vc_amore_site:/amoreSite
-#       - vc_date_site:/dateSite
-#       - vc_amore_cdb:/local/cdb
-#       - /etc/localtime:/etc/localtime 
-#     links:
-#       - dim
-#       - datedb
-#       - infologger
-#     hostname: agentMCHDA
-#     environment: 
-#       DATE_RUN_NUMBER: 256289
-#       TZ: "Europe/Paris"
-#     entrypoint: /amore_setup.sh amoreAgent -a MCHDA -s /data_for_db_agents.raw -r -t 45 
-#     cpu_shares: 256 
-# #
-#   agentMCHQC:
-#     build: amore
-#     image: alice-amore
-#     volumes:
-#       - vc_amore_site:/amoreSite
-#       - vc_date_site:/dateSite
-#       - vc_amore_cdb:/local/cdb
-#       - /etc/localtime:/etc/localtime 
-#     links:
-#       - dim
-#       - datedb
-#       - infologger
-#     hostname: agentMCHQC
-# #    entrypoint: /amore_setup.sh amoreAgent -a MCHQAshifter -s /amoreSite/15000237401023.509.FILTER_RAWMUON_WITH_ALIPHYSICS_v5-06-04-01.raw -r
-#     environment: 
-#       DATE_RUN_NUMBER: 256289
-#       TZ: "Europe/Paris"
-#     entrypoint: /amore_setup.sh amoreAgent -a MCHQC -s /amoreSite/16000256289037.8802.raw -r -e 470 -c 1
-#     #entrypoint: /amore_setup.sh amoreAgent -a MCHQC -s /amoreSite/16000256289037.8802.raw -r
-#     cpu_shares: 256 
-#
   amore-web:
     build: amore
     image: alice-amore 
@@ -168,7 +177,7 @@ services:
       - 8100:80
     environment:
       DIM_DNS_NODE: "dim"
-    entrypoint: /amore_setup.sh httpd -DFOREGROUND 
+    entrypoint: /httpd_setup.sh
     cpu_shares: 256 
 
   phpmyadmin:

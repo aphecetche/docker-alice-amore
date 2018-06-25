@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+.ali_echo_strong "==================== $1"
+shift
+$@

@@ -31,6 +31,12 @@ brew install iproute2mac
 
 where we assume that you have `brew` installed on you Mac, of course ;-) 
 
+You also must have `/alice` in the list of directories in Docker's app File Sharing menu.
+
+It is assumed that you use [environment modules](http://modules.sourceforge.net) for your setup, and that `~/privatemodules` is in your `MODULEPATH`
+
+You must also install the [docker module file](https://github.com/aphecetche/scripts/tree/master/docker) which defines some functions that are used by this project.
+
 # Installation 
 
 After having installed Docker on your machine, you should then `git clone` this
@@ -41,23 +47,22 @@ After having installed Docker on your machine, you should then `git clone` this
 > cd docker-alice-online
 ```
 
+And copy the module file to a usefull location.
+
+```
+cp docker-alice-online.modulefile ~/privatemodules
+```
+
 Of particular interest in the `docker-alice-online` directory are the `docker-compose.yml`
- which is the main file to steer the containers and `alice-online-functions.sh` which 
- defines a bunch of convenience functions to work with the created containers.
+ which is the main file to steer the containers and the `ali_xxx` commands which 
+ ease the work with the created containers.
 
 Before you can use the thing, you have to :
 
 - build the images upon which the containers are created
 - populate the data volumes used by the containers
 
-Let's first
- source the `alice-online-functions.sh` script to get some helper functions defined.
-
-```bash
-. ./alice-online-functions.sh
-```
-
-Then use the `bootstrap` function to perform the necessary (one-time only) 
+To do so we use the `ali_bootstrap` function to perform the necessary (one-time only) 
  operations
 
 ```bash
@@ -97,16 +102,13 @@ And point your browser to [localhost:8080](localhost:8080), using (root,date) as
 # Usage 
 
 The normal usage (once everything has been bootstrapped correctly) is to launch the set of containers 
-using the `docker-compose up` command (the -d flag, as in `daemon` is 
-used to launch containers in detached mode).
+using the `ali_start` command
  
 ```bash
-> docker-compose up -d
+> ali_start
 ```
 
-You should then check that indeed your containers are started (note that all 
-docker-compose commands should be issued from the directory that has the docker-compose.yml
-file, i.e. the docker-alice-online directory).
+You should then check that indeed your containers are started.
 
 ```bash
 > docker-compose ps
@@ -180,15 +182,15 @@ Please note that :
 In order to be able to develop your code, the idea is that you checkout it locally
  and then mount it in the container where it is built (and is stored in a data volume).
 
-The local location of the source code is expected to be found in some environment variables  defined in the `ali_dev_env` function in `alice-online-functions.sh`) 
+The local location of the source code is expected to be found in some environment variables  defined in the modulefile.
 
 
 | env variable name | default value |
 |-------------------|---------------|
-| ALI_DEV_ENV_PATH_AMORE | $HOME/alicesw/run2/amore |
-| ALI_DEV_ENV_PATH_AMORE_MODULES | $HOME/alicesw/run2/amore_modules |
+| ALI_DEV_ENV_PATH_AMORE | $HOME/alice/ali-master/amore |
+| ALI_DEV_ENV_PATH_AMORE_MODULES | $HOME/alice/ali-master/amore_modules |
 | ALI_DEV_ENV_PATH_DOTGLOBUS | $HOME/.globus |
-| ALI_DEV_ENV_PATH_ALIROOT_DATE | $HOME/alicesw/run2/aliroot-date |
+| ALI_DEV_ENV_PATH_ALIROOT_DATE | $HOME/alice/ali-master/AliRoot |
 
 
 For instance, if you try to enter a container used to develop amore using the `ali_amore_dev` command,
@@ -196,7 +198,7 @@ you'll most probably be greeted with an error :
 
 ```
 > ali_amore_dev
-Directory /home/laurent/alicesw/run2/amore_modules does not exist !
+Directory /home/laurent/alice/ali-master/amore_modules does not exist !
 ```
 
 At this point what you have to do is checkout the relevant code in the right directory (or define accordingly the
@@ -254,19 +256,15 @@ If you are on Linux (and did not change the location of Docker runtime `/var/lib
 The `vc_` prefix is not docker-defined, but is a convention I'm using to denote Volume Containers.
 
 One last thing to get a working Amore agent is to setup the vc_amore_cdb volume. That step is a little manual so far,
-because we need to know the source OCDB. For instance : 
+because we need to know the source OCDB. For instance, assuming you used `module load AliRoot-OCDB` :
 
 ```
 docker-compose up -d agentrunner
-docker cp $HOME/alicesw/run2/aliroot-date/AliRoot/OCDB/GRP dockeraliceonline_agentrunner_1:/local/cdb
-docker cp $HOME/alicesw/run2/aliroot-date/AliRoot/OCDB/MUON dockeraliceonline_agentrunner_1:/local/cdb
+docker cp $ALIROOT_OCDB_ROOT/OCDB/GRP alice-online_agentrunner_1:/local/cdb
+docker cp $ALIROOT_OCDB_ROOT/OCDB/MUON alice-online_agentrunner_1:/local/cdb
 ```
 
-And also (depending on how your agent is setup in the docker-compose.yml file), copy some raw data to `vc_amore_site` :
-
-```
-docker cp /alice/data/2016/LHC16j/000256289/raw/16000256289037.8802.raw dockeraliceonline_agentMCHQAshifter_1:/amoreSite/
-```
+The data itself is accessed from anywhere in `/alice/data/` which is bind mounted in the agent(s) container(s).
 
 So far so good for amore and amore modules. 
 

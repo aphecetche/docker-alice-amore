@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# download our base images
+docker-compose pull datedb || exit 1
+docker-compose pull phpmyadmin || exit 2
+
+# build the alice-date image
+docker-compose build dim || exit 3
+# build the alice-amore image
+docker-compose build agentrunner || exit 4
+# build the alice-online-devel image
+docker-compose build dadev || exit 5
+# build the alice-more image
+docker-compose build archiver || exit 6
+# build the alice-online-devel
+docker-compose build dadev || exit 7
+
+exit 0

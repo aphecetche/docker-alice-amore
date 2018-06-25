@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+# get the mysql server up
+docker-compose up -d datedb || exit 1
+
+n="0"
+
+while [ $n -lt 60 ]
+do
+    # try to access a database to know if mysql has indeed started
+    docker-compose exec datedb \
+    mysql -uroot -pdate -hlocalhost -e "use mysql" > /dev/null 2>&1
+    
+    if [ $? -eq 0 ]; then
+        echo "datedb is up after $n attempts"
+        exit 0
+    else
+        sleep 1
+    fi
+    n=$[$n+1]
+done
+
+exit 1

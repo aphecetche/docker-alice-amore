@@ -13,7 +13,6 @@ fi
 
 # use decently recent dev tools
 source scl_source enable git19 python27
-pip install --upgrade alibuild==1.4.0.rc1
 
 # start at /alicesw if available
 if [[ -d /alicesw ]]; then

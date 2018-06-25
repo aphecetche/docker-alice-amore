@@ -1,0 +1,72 @@
+#!/usr/bin/env sh
+
+.ali_make_volumes || exit 1
+
+.ali_up_datedb || exit 2
+
+.ali_echo "datedb is up. Calling newMysql.sh"
+
+# create the databases
+docker run -i --rm \
+-v vc_date_db:/var/lib/mysql \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+alice-date \
+          /date/.commonScripts/newMysql.sh <<EOF
+      datedb
+      date
+      DATE_CONFIG
+      DATE_LOG
+      ECS_CONFIG
+      LOGBOOK
+      daq daq
+EOF
+if [ $? -ne 0 ]; then
+    exit 3
+fi
+
+.ali_echo "Databases created"
+
+# populate the databases
+docker run -i --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+alice-date \
+        /date/.commonScripts/newDateSite.sh <<EOF
+    /dateSite
+    DATE_CONFIG daq daq datedb
+    root
+    dim
+    DATE
+    DATE_LOG daq daq datedb
+    LOGBOOK daq daq datedb
+    y
+    DAQ_TEST
+    y
+    y
+EOF
+
+if [ $? -ne 0 ]; then
+    exit 4
+fi
+
+.ali_echo "Databases populated"
+
+# tweak the DATE_INFOLOGGER_LOGHOST which is not correctly set by the
+# newDataSite.sh script
+
+
+.ali_daqDB_query "UPDATE ENV SET VALUE=\"infologger\" WHERE NAME=\"DATE_INFOLOGGER_LOGHOST\";"
+
+docker-compose up -d infologger
+
+sleep 10
+
+# set the FES access information
+.ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_DB','daq:daq@datedb/DATE_LOG','Database','',1);" || exit 5
+
+.ali_daqDB_query "INSERT INTO ENV VALUES ('DATE_FES_PATH','/daqfxs','Database','',1);" || exit 6
+
+docker-compose down || exit 7
+
+exit 0

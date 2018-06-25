@@ -2,5 +2,4 @@
 
 . /amore_env.sh
 
-exec "$@"
-
+httpd -DFOREGROUND

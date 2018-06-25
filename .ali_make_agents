@@ -1,0 +1,42 @@
+#!/usr/bin/env sh
+
+
+# create a few default agents
+# feel free to add yours here
+
+.ali_up_datedb
+
+.ali_echo "Making agent MCHQAshifter"
+
+      ali_amore tmpMCHQAshifter /opt/amore/bin/newAmoreAgent > /dev/null  2>&1 <<EOF
+      MCHQAshifter
+      runner-mchqashifter
+      agentMCHQAshifter
+      QA
+      QA
+      :
+      PublisherQA
+EOF
+
+.ali_echo "Making agent MCHQC"
+      ali_amore tmpMCHQC /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
+      MCHQC
+      runner-mchqc
+      agentMCHQC
+      MCH
+      MCH
+      :
+      QualityControl
+EOF
+.ali_echo "Making agent MCHDA"
+      ali_amore tmpMCHDA /opt/amore/bin/newAmoreAgent > /dev/null 2>&1 <<EOF
+      MCHDA
+      runner-mchda
+      agentMCHDA
+      DB
+      MCH
+      /data_for_db_agents.raw
+      DBPublisher
+EOF
+docker-compose down
+

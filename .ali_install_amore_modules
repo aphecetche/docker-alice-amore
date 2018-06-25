@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+# install a bunch of modules (without the amore prefix, e.g. MCH, DB, TRI,
+# and not amoreMCH, amoreDB, ...)
+# in vc_amore_site volume
+
+for module in $@
+do
+    docker run --rm -v vc_amore_site:/amoreSite \
+    --net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+    --link ${DOCKER_ALICEONLINE_PROJECTNAME}_datedb_1 \
+    alice-amore \
+    yum install -y amore${module}
+done

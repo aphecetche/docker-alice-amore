@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+for vol in $(echo $(.ali_volumes) | tr " " "\n")
+do
+    docker volume create --name $vol || exit 1
+done
+exit 0

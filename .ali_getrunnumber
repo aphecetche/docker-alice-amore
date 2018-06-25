@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# get the runnumber from a filepath
+# very dump version that assume the given filename
+# can not be any else than a pristine raw data chunk name
+# in the form YY000123456ZZZ.chunknumber.raw
+file=$(basename $1)
+echo ${file:5:6}

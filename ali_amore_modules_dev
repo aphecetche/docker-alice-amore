@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+# create an amore container
+# with the proper links etc...
+# than can be used to compile amore modules
+host_name=${1:-ali-amore-modules-dev-default-hostname}
+docker_run_withX11 -it --rm \
+-v vc_date_site:/dateSite \
+-v vc_date_db:/var/lib/mysql \
+-v vc_amore_site:/amoreSite \
+-v vc_amore_cdb:/local/cdb \
+-v ${HOME}/alice/ali-master/amore_modules/:/amore_modules \
+-v ${HOME}/.globus:/root/.globus \
+--link dockeraliceonline_datedb_1 \
+--link dockeraliceonline_dim_1 \
+--link dockeraliceonline_infologger_1 \
+--net ${DOCKER_ALICEONLINE_PROJECTNAME}_default \
+-e DATE_SITE=/dateSite \
+--name=$host_name \
+--hostname=$host_name \
+--cap-add sys_ptrace \
+alice-online-devel \
+/bin/bash
